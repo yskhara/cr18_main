@@ -1,0 +1,33 @@
+<launch>
+
+    
+    <node pkg="nhk2018_main_ros" type="tr_launcher_unitTest" name="main" output="screen">
+    </node>
+    
+    <!-- shutdown controller -->
+    <node pkg="base_controller" type="shutdown_controller" name="shutdown_ctrl" />
+    
+    <!-- base itself -->
+    <node pkg="rosserial_server" type="serial_node" name="base">
+<rosparam>
+port: /dev/ttyUSB0
+baud: 57600
+require:
+  publishers: [ base/shutdown ]
+  subscribers: [ motor_cmd_vel, shutdown ]
+</rosparam>
+    </node>
+    
+    <!-- launcher itself -->
+    <node pkg="rosserial_server" type="serial_node" name="launcher">
+<rosparam>
+port: /dev/ttyUSB1
+baud: 57600
+require:
+  publishers: [  ]
+  subscribers: [ shutdown ]
+</rosparam>
+    </node>
+    
+    <node pkg="rosserial_python" type="message_info_service.py" name="rosserial_message_info" />
+</launch>

@@ -1,0 +1,62 @@
+<launch>
+<rosparam>
+ButtonA: 0
+ButtonB: 1
+ButtonX: 3
+ButtonY: 4
+ButtonLB: 6
+ButtonRB: 7
+ButtonSelect: 11
+ButtonStart: 11
+ButtonLeftThumb: 13
+ButtonRightThumb: 14
+AxisDPadX: 6
+AxisDPadY: 7
+</rosparam>
+    <!-- base controller -->
+    <node pkg="base_controller" type="base_controller" name="base_ctrl" output="screen">
+       <param name="motor_max_acc" value="125.0" />
+       <param name="motor_max_vel" value="62.5" />
+    </node>
+    
+    <!-- tr_main -->
+    <node pkg="nhk2018_main_ros" type="nhk2018_main_ros_tr_main" name="tr_main_ctrl" output="screen">
+        <rosparam param="unchuck_thres">[304, 304, 144]</rosparam>
+    </node>
+    
+    <!-- joy teleop -->
+    <node pkg="base_controller" type="base_teleop_joy" name="base_teleop_joy"/>
+    
+    <!-- joy node -->
+    <node respawn="true" pkg="joy" type="joy_node" name="joy_node" >
+        <param name="dev" type="string" value="/dev/input/js0" />
+        <param name="deadzone" value="0.12" />
+    </node>
+    
+    <!-- shutdown controller -->
+    <node pkg="base_controller" type="shutdown_controller" name="shutdown_ctrl" />
+    
+    <!-- base itself -->
+    <node pkg="rosserial_server" type="serial_node" name="base">
+<rosparam>
+port: /dev/ttyUSB0
+baud: 57600
+require:
+  publishers: [  ]
+  subscribers: [ motor_cmd_vel, shutdown ]
+</rosparam>
+    </node>
+    
+    <!-- base itself -->
+    <node pkg="rosserial_server" type="serial_node" name="launcher">
+<rosparam>
+port: /dev/ttyUSB1
+baud: 57600
+require:
+  publishers: [  ]
+  subscribers: [ shutdown ]
+</rosparam>
+    </node>
+    
+    <node pkg="rosserial_python" type="message_info_service.py" name="rosserial_message_info" />
+</launch>
