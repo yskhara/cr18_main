@@ -15,8 +15,11 @@ AxisDPadY: 7
 </rosparam>
     <!-- base controller -->
     <node pkg="base_controller" type="base_controller" name="base_ctrl" output="screen">
-       <param name="motor_max_acc" value="125.0" />
-       <param name="motor_max_vel" value="62.5" />
+       <param name="motor_max_acc" value="100.0" />
+       <param name="motor_max_vel" value="50" />
+       <param name="invert_x" value="true" />
+       <param name="invert_y" value="true" />
+       <param name="invert_z" value="false" />
     </node>
     
     <!-- tr_main -->
@@ -33,7 +36,7 @@ AxisDPadY: 7
     </node>
     
     <!-- shutdown controller -->
-    <node pkg="base_controller" type="shutdown_controller" name="shutdown_ctrl" />
+    <node pkg="base_controller" type="shutdown_controller_joy" name="shutdown_ctrl" />
     
     <!-- base itself -->
     <node pkg="rosserial_server" type="serial_node" name="base">

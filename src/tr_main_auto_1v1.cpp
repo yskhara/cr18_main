@@ -9,8 +9,10 @@
 #include <std_msgs/UInt16.h>
 #include <std_msgs/Float64.h>
 #include <std_msgs/Bool.h>
-#include <geometry_msgs/Pose2D.h>
+#include <geometry_msgs/PoseStamped.h>
 #include <nav_msgs/Path.h>
+#include <tf/tf.h>
+//#include <tf/transform_broadcaster.h>
 #include <vector>
 #include <string>
 
@@ -44,7 +46,7 @@ private:
 	std_msgs::UInt16 launcher_cmd_msg;
 	std_msgs::UInt16 launcher_unchuck_thres_msg;
 
-	geometry_msgs::Pose2D target_msg;
+	nav_msgs::Path target_msg;
 
 	std_msgs::Bool abort_msg;
 
@@ -210,15 +212,15 @@ void TrMain::shutdownCallback(const std_msgs::Bool::ConstPtr& msg)
 #else
 	else if(this->currentCommandIndex == 0)
 	{
-		ros::Duration(0.5).sleep(); // sleep for half a second
+		//ros::Duration(0.5).sleep(); // sleep for half a second
 		this->disarm();
 
-		ros::Duration(1.5).sleep();
+		ros::Duration(5.0).sleep();
 		this->arm();
 
 		ros::Duration(0.5).sleep(); // sleep for half a second
 
-		this->move(0.5, 0, 0);
+		this->move(1.5, 0, 0);
 
 		this->currentCommandIndex = 1;
 		ROS_INFO("moving: 1");
@@ -228,13 +230,21 @@ void TrMain::shutdownCallback(const std_msgs::Bool::ConstPtr& msg)
 
 void TrMain::move(double x, double y, double theta)
 {
-	geometry_msgs::Pose2D _target_msg;
+	geometry_msgs::PoseStamped _pose;
 
-	_target_msg.x = x;
-	_target_msg.y = y;
-	_target_msg.theta = theta;
+	_pose.header.frame_id = "map";
 
-	this->target_pub.publish(_target_msg);
+
+	_pose.header.stamp = ros::Time::now();
+	_pose.pose.position.x = x;
+	_pose.pose.position.y = y;
+	_pose.pose.orientation = tf::createQuaternionMsgFromYaw(theta);
+
+	this->target_msg.header.frame_id = "map";
+	this->target_msg.header.stamp = ros::Time::now();
+	this->target_msg.poses.push_back(_pose);
+
+	this->target_pub.publish(target_msg);
 }
 
 void TrMain::disarm(void)

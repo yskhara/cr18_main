@@ -204,8 +204,11 @@ target_link_libraries(${PROJECT_NAME}_tr_main_joy ${catkin_LIBRARIES})
 add_executable(cr_main_joy src/cr_main_joy.cpp)
 target_link_libraries(cr_main_joy ${catkin_LIBRARIES})
 
-add_executable(tr_main_auto_1v src/tr_main_auto_1v.cpp)
-target_link_libraries(tr_main_auto_1v ${catkin_LIBRARIES})
+add_executable(tr_main_auto_1v1 src/tr_main_auto_1v1.cpp)
+target_link_libraries(tr_main_auto_1v1 ${catkin_LIBRARIES})
+
+add_executable(tr_main_auto_1v2 src/tr_main_auto_1v2.cpp)
+target_link_libraries(tr_main_auto_1v2 ${catkin_LIBRARIES})
 
 add_executable(tr_launcher_unitTest src/tr_launcher_unitTest.cpp)
 target_link_libraries(tr_launcher_unitTest ${catkin_LIBRARIES})
