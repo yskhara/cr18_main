@@ -1,14 +1,19 @@
 <launch>
     <!-- arg name="use_sim_time" default="false"/>
     <param name="use_sim_time" value="$(arg use_sim_time" /-->
+    <arg name="use_joy" value="true" />
+    
     <!-- base controller -->
     <node pkg="base_controller" type="base_controller" name="base_ctrl" output="screen">
-        <param name="motor_max_acc" value="125.0" />
-        <param name="motor_max_vel" value="62.5" />
+       <param name="motor_max_acc" value="100.0" />
+       <param name="motor_max_vel" value="50" />
+       <param name="invert_x" value="false" />
+       <param name="invert_y" value="true" />
+       <param name="invert_z" value="false" />
     </node>
     
-    <include file="$(find localization)/launch/amcl_test.launch">
-        <arg name="map_file" value="$(find localization)/map/map_centre_incomplete.yaml" />
+    <include file="$(find navigation)/launch/navigation.launch">
+        <arg name="map_file" value="$(find navigation)/map/map_centre_incomplete.yaml" />
     </include>
 
     <!-- tr_main -->
@@ -17,10 +22,21 @@
         <rosparam param="unchuck_thres">[450, 400, 144]</rosparam>
     </node -->
     
-    <!-- shutdown controller -->
-    <node pkg="base_controller" type="shutdown_controller" name="shutdown_ctrl" />
     
-    <node pkg="tf" type="static_transform_publisher" name="base_to_laser_link" args="0 0 0 0 0 0 base_link laser_link 100"/>
+    <!-- joy teleop -->
+    <node pkg="base_controller" type="base_teleop_joy" name="base_teleop_joy"/>
+    
+    <!-- joy node -->
+    <node respawn="true" pkg="joy" type="joy_node" name="joy_node" >
+        <param name="dev" type="string" value="/dev/input/js0" />
+        <param name="deadzone" value="0.12" />
+    </node>
+    
+    
+    <!-- shutdown controller -->
+    <node pkg="base_controller" type="shutdown_controller_joy" name="shutdown_ctrl" />
+    
+    <!--node pkg="tf" type="static_transform_publisher" name="base_to_laser_link" args="0 0 0 0 0 0 base_link laser_link 100"/-->
     
     <!-- base itself -->
     <node pkg="rosserial_server" type="serial_node" name="base">

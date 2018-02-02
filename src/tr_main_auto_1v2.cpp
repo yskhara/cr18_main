@@ -10,6 +10,7 @@
 #include <std_msgs/Float64.h>
 #include <std_msgs/Bool.h>
 #include <geometry_msgs/PoseStamped.h>
+#include <geometry_msgs/PoseWithCovarianceStamped.h>
 #include <nav_msgs/Path.h>
 #include <tf/tf.h>
 //#include <tf/transform_broadcaster.h>
@@ -42,6 +43,7 @@ private:
 	ros::Publisher launcher_unchuck_thres_pub;
 	ros::Publisher target_pub;
 	ros::Publisher abort_pub;
+	ros::Publisher set_pose_pub;
 
 	std_msgs::UInt16 launcher_cmd_msg;
 	std_msgs::UInt16 launcher_unchuck_thres_msg;
@@ -81,6 +83,8 @@ TrMain::TrMain(void)
 	this->launcher_cmd_pub = nh_.advertise<std_msgs::UInt16>("launcher/cmd", 1);
 	this->launcher_unchuck_thres_pub = nh_.advertise<std_msgs::UInt16>("launcher/unchuck_thres", 1);
 
+	this->set_pose_pub = nh_.advertise<geometry_msgs::PoseWithCovarianceStamped>("/nav/set_pose", 1);
+
 	auto nh_priv = ros::NodeHandle("~");
 
 	this->tr = 1;
@@ -109,54 +113,59 @@ void TrMain::goalReachedCallback(const std_msgs::Bool::ConstPtr& msg)
 		return;
 	}
 
+	ROS_INFO("goal reached.");
+
 	if(this->currentCommandIndex == 1)
 	{
-		//ros::Duration(0.5).sleep(); // sleep for half a second
+		//ros::Duration(2.0).sleep(); // sleep for half a second
 
-		this->launcher_unchuck_thres_msg.data = this->launcher_thresholds[(this->tr - 1)];
-		this->launcher_unchuck_thres_pub.publish(this->launcher_unchuck_thres_msg);
-
-		if(tr == 1)
-		{
-			this->move(1.2, -0.2, M_PI/2);
-		}
-		else if(tr == 2)
-		{
-			this->move(1.2, 0, M_PI/2);
-		}
-		else if(tr == 3)
-		{
-			this->move((1.2 + 3.27), 0, M_PI/2);
-		}
+		//this->disarm();
 
 		this->currentCommandIndex = 2;
-		ROS_INFO("moving: 2");
+
+		ROS_INFO("standing by: 2");
 	}
+	/*
 	else if(this->currentCommandIndex == 2)
 	{
+		ros::Duration(2.0).sleep(); // sleep for half a second
+
+		this->move(0.05, 0, 0);
+
+		this->currentCommandIndex = 3;
+		ROS_INFO("moving: 3");
+	}*/
+	else if(this->currentCommandIndex == 4)
+	{
+		ros::Duration(0.5).sleep();
+
+		this->arm();
+
+		ros::Duration(0.5).sleep();
+
+		this->move(1.5, 0, 0);
+
+		this->currentCommandIndex = 5;
+		ROS_INFO("moving: 5");
+	}
+	else if(this->currentCommandIndex == 5)
+	{
+		ros::Duration(1.0).sleep(); // sleep for half a second
+
+		this->disarm();
+
 		abort_msg.data = true;
 		this->abort_pub.publish(abort_msg);
 
-		ros::Duration(1.5).sleep(); // sleep for half a second
+		//ros::Duration(1.5).sleep(); // sleep for half a second
 
-		this->launch();
+		//this->launch();
 
 		//this->move(2.7, -3.0, M_PI/2);
 
-		this->currentCommandIndex = 3;
-		ROS_INFO("moving: 3; launching.");
+		this->currentCommandIndex = 6;
+		ROS_INFO("moving: 6");
 	}
-	/*
-	else if(this->currentCommandIndex == 3)
-	{
-		ros::Duration(0.5).sleep(); // sleep for half a second
-
-		this->launch();
-
-		this->currentCommandIndex = 4;
-		ROS_INFO("moving: 4; launching.");
-	}
-	*/
 }
 
 void TrMain::launchCompletedCallback(const std_msgs::Bool::ConstPtr& msg)
@@ -173,45 +182,37 @@ void TrMain::shutdownCallback(const std_msgs::Bool::ConstPtr& msg)
 {
 	if(msg->data)
 	{
-		if(this->currentCommandIndex != 0)
+		if(this->currentCommandIndex == 2)
 		{
-			ROS_INFO("aborting.");
+			this->currentCommandIndex = 3;
+
+			ROS_INFO("paused: 3");
 		}
-		this->currentCommandIndex = 0;
+		else if(this->currentCommandIndex == 3)
+		{
 
-		this->disarm();
+		}
+		else
+		{
+			if(this->currentCommandIndex != 0)
+			{
+				ROS_INFO("aborting.");
+			}
+			this->currentCommandIndex = 0;
 
-		abort_msg.data = true;
-		this->abort_pub.publish(abort_msg);
+			this->disarm();
+
+			abort_msg.data = true;
+			this->abort_pub.publish(abort_msg);
+		}
 	}
-#if 0
 	else if(this->currentCommandIndex == 0)
 	{
-		this->launcher_unchuck_thres_msg.data = this->launcher_thresholds[(this->tr - 1)];
-		this->launcher_unchuck_thres_pub.publish(this->launcher_unchuck_thres_msg);
+		geometry_msgs::PoseWithCovarianceStamped _pose;
+		_pose.header.frame_id = "odom";
+		_pose.header.stamp = ros::Time::now();
+		this->set_pose_pub.publish(_pose);
 
-		//ros::Duration(0.1).sleep(); // sleep for half a second
-		this->disarm();
-
-		ros::Duration(2.0).sleep();
-		this->arm();
-
-		ros::Duration(5.0).sleep(); // sleep for half a second
-		this->launch();
-
-		ros::Duration(1.0).sleep();
-		//this->move(2.7, -3.0, M_PI/2);
-
-		std_msgs::Bool _abort_msg;
-		_abort_msg.data = true;
-		this->abort_pub.publish(_abort_msg);
-
-		this->currentCommandIndex = 3;
-		ROS_INFO("launching.");
-	}
-#else
-	else if(this->currentCommandIndex == 0)
-	{
 		//ros::Duration(0.5).sleep(); // sleep for half a second
 		this->disarm();
 
@@ -225,11 +226,25 @@ void TrMain::shutdownCallback(const std_msgs::Bool::ConstPtr& msg)
 		this->currentCommandIndex = 1;
 		ROS_INFO("moving: 1");
 	}
-#endif
+	else if(this->currentCommandIndex == 3)
+	{
+		ros::Duration(0.5).sleep(); // sleep for half a second
+
+		this->disarm();
+
+		ros::Duration(3.0).sleep(); // sleep for half a second
+
+		this->move(0.02, 0, 0);
+
+		this->currentCommandIndex = 4;
+		ROS_INFO("moving: 4");
+	}
 }
 
 void TrMain::move(double x, double y, double theta)
 {
+	this->target_msg.poses.clear();
+
 	geometry_msgs::PoseStamped _pose;
 
 	_pose.header.frame_id = "map";

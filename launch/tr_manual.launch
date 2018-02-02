@@ -15,8 +15,11 @@ AxisDPadY: 7
 </rosparam>
     <!-- base controller -->
     <node pkg="base_controller" type="base_controller" name="base_ctrl" output="screen">
-       <param name="motor_max_acc" value="125.0" />
-       <param name="motor_max_vel" value="62.5" />
+       <param name="motor_max_acc" value="100.0" />
+       <param name="motor_max_vel" value="50" />
+       <param name="invert_x" value="true" />
+       <param name="invert_y" value="false" />
+       <param name="invert_z" value="false" />
     </node>
     
     <!-- tr_main -->
