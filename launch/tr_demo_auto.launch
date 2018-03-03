@@ -1,0 +1,42 @@
+<launch>
+
+    <!-- Navigation stuff -->
+    <include file="$(find navigation)/launch/navigation.launch">
+        <arg name="use_amcl" value="false" />
+        <arg name="use_dummy_odom" value="false" />
+        <arg name="use_ekf" value="false" />
+    </include>
+
+    <!-- base controller -->
+    <node pkg="base_controller" type="base_controller" name="base_ctrl" output="screen">
+        <param name="motor_max_acc" value="130.0" />
+        <param name="motor_max_vel" value="130.0" />
+        <!--
+        <param name="motor_max_acc" value="125.0" />
+        <param name="motor_max_vel" value="62.5" />
+        -->
+        <remap from="cmd_vel" to="nav/cmd_vel" />
+    </node>
+    
+    <node pkg="nhk2018_main_ros" type="tr_main_auto_1v2" name="main" output="screen">
+        <param name="tr" value="2" />
+        <rosparam param="unchuck_thres">[450, 400, 144]</rosparam>
+        <remap from="goal_reached" to="nav/goal_reached" />
+    </node>
+    
+    <!-- shutdown controller -->
+    <node pkg="base_controller" type="shutdown_controller" name="shutdown_ctrl" />
+    
+    <!-- base itself -->
+    <node pkg="rosserial_server" type="serial_node" name="base">
+<rosparam>
+port: /dev/ttyUSB0
+baud: 57600
+require:
+  publishers: [  ]
+  subscribers: [ motor_cmd_vel, shutdown ]
+</rosparam>
+    </node>
+    
+    <node pkg="rosserial_python" type="message_info_service.py" name="rosserial_message_info" />
+</launch>

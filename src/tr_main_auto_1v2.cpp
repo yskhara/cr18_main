@@ -123,48 +123,10 @@ void TrMain::goalReachedCallback(const std_msgs::Bool::ConstPtr& msg)
 
 		this->currentCommandIndex = 2;
 
-		ROS_INFO("standing by: 2");
-	}
-	/*
-	else if(this->currentCommandIndex == 2)
-	{
-		ros::Duration(2.0).sleep(); // sleep for half a second
-
-		this->move(0.05, 0, 0);
-
-		this->currentCommandIndex = 3;
-		ROS_INFO("moving: 3");
-	}*/
-	else if(this->currentCommandIndex == 4)
-	{
-		ros::Duration(0.5).sleep();
-
-		this->arm();
-
-		ros::Duration(0.5).sleep();
-
-		this->move(1.5, 0, 0);
-
-		this->currentCommandIndex = 5;
-		ROS_INFO("moving: 5");
-	}
-	else if(this->currentCommandIndex == 5)
-	{
-		ros::Duration(1.0).sleep(); // sleep for half a second
-
-		this->disarm();
-
 		abort_msg.data = true;
 		this->abort_pub.publish(abort_msg);
 
-		//ros::Duration(1.5).sleep(); // sleep for half a second
-
-		//this->launch();
-
-		//this->move(2.7, -3.0, M_PI/2);
-
-		this->currentCommandIndex = 6;
-		ROS_INFO("moving: 6");
+		ROS_INFO("done: 2");
 	}
 }
 
@@ -182,62 +144,51 @@ void TrMain::shutdownCallback(const std_msgs::Bool::ConstPtr& msg)
 {
 	if(msg->data)
 	{
-		if(this->currentCommandIndex == 2)
+		if(this->currentCommandIndex != 0)
 		{
-			this->currentCommandIndex = 3;
-
-			ROS_INFO("paused: 3");
+			ROS_INFO("aborting.");
 		}
-		else if(this->currentCommandIndex == 3)
-		{
+		this->currentCommandIndex = 0;
 
-		}
-		else
-		{
-			if(this->currentCommandIndex != 0)
-			{
-				ROS_INFO("aborting.");
-			}
-			this->currentCommandIndex = 0;
+		this->disarm();
 
-			this->disarm();
-
-			abort_msg.data = true;
-			this->abort_pub.publish(abort_msg);
-		}
+		abort_msg.data = true;
+		this->abort_pub.publish(abort_msg);
 	}
 	else if(this->currentCommandIndex == 0)
 	{
-		geometry_msgs::PoseWithCovarianceStamped _pose;
-		_pose.header.frame_id = "odom";
-		_pose.header.stamp = ros::Time::now();
-		this->set_pose_pub.publish(_pose);
-
-		//ros::Duration(0.5).sleep(); // sleep for half a second
-		this->disarm();
-
-		ros::Duration(5.0).sleep();
-		this->arm();
+		geometry_msgs::PoseWithCovarianceStamped _set_pose;
+		_set_pose.header.frame_id = "odom";
+		_set_pose.header.stamp = ros::Time::now();
+		this->set_pose_pub.publish(_set_pose);
 
 		ros::Duration(0.5).sleep(); // sleep for half a second
 
-		this->move(1.5, 0, 0);
+		//this->move(0.53, -4.0, 0);
+
+		this->target_msg.poses.clear();
+
+		geometry_msgs::PoseStamped _pose;
+
+		this->target_msg.header.frame_id = "map";
+		this->target_msg.header.stamp = ros::Time::now();
+
+		_pose.header.frame_id = "map";
+		_pose.header.stamp = ros::Time::now();
+		_pose.pose.position.x = 0.0;
+		_pose.pose.position.y = 0.0;
+		_pose.pose.orientation = tf::createQuaternionMsgFromYaw(0);
+		this->target_msg.poses.push_back(_pose);
+
+		_pose.pose.position.x = 2.0;
+		_pose.pose.position.y = 0.0;
+		_pose.pose.orientation = tf::createQuaternionMsgFromYaw(M_PI / 2.0);
+		this->target_msg.poses.push_back(_pose);
+
+		this->target_pub.publish(target_msg);
 
 		this->currentCommandIndex = 1;
 		ROS_INFO("moving: 1");
-	}
-	else if(this->currentCommandIndex == 3)
-	{
-		ros::Duration(0.5).sleep(); // sleep for half a second
-
-		this->disarm();
-
-		ros::Duration(3.0).sleep(); // sleep for half a second
-
-		this->move(0.02, 0, 0);
-
-		this->currentCommandIndex = 4;
-		ROS_INFO("moving: 4");
 	}
 }
 
