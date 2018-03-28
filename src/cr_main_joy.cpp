@@ -8,6 +8,7 @@
 #include <ros/ros.h>
 #include <sensor_msgs/Joy.h>
 #include <std_msgs/UInt16.h>
+#include <std_msgs/Bool.h>
 #include <vector>
 #include <string>
 /*
@@ -26,27 +27,59 @@ static constexpr int AxisDPadX = 6;
 static constexpr int AxisDPadY = 7;
 */
 
+enum class CarrierStatus : uint16_t
+{
+	shutdown			= 0x0000,
+	reset				= 0x0001,
+
+	/*
+	operational			= 0x0002,
+
+	chuck0_chucked		= 0x0010,
+	chuck1_chucked		= 0x0020,
+	chuck2_chucked		= 0x0040,
+	chuck3_chucked		= 0x0080,
+	 */
+};
+
+enum class CarrierCommands : uint16_t
+{
+	shutdown_cmd		= 0x0000,
+	reset_cmd			= 0x0001,
+	/*
+	operational			= 0x0002,
+	 */
+
+	chuck_cmd			= 0x0100,
+	unchuck_cmd			= 0x0200,
+
+	chuck0				= 0x0010,
+	chuck1				= 0x0020,
+	chuck2				= 0x0040,
+	chuck3				= 0x0080,
+};
+
 class CrMain
 {
 public:
 	CrMain(void);
 
 private:
+	void shutdownCallback(const std_msgs::Bool::ConstPtr& msg);
 	void joyCallback(const sensor_msgs::Joy::ConstPtr& joy);
 
 	ros::NodeHandle nh_;
 
 	//int linear_, angular_;
-	ros::Subscriber joy_sub_;
+	ros::Subscriber joy_sub;
+	ros::Subscriber shutdown_sub;
 	ros::Publisher hand_cmd_pub;
 	//ros::Publisher hand_unchuck_thres_pub;
 
 	std_msgs::UInt16 hand_cmd_msg;
 	//std_msgs::UInt16 hand_unchuck_thres_msg;
 
-	//std::vector<int> hand_thresholds;
-	//int hand_currentThresholdIndex = 0;
-	int hand_currentIndex = 1;
+	bool _shutdown = false;
 
 	static int ButtonA;
 	static int ButtonB;
@@ -61,13 +94,6 @@ private:
 
 	static int AxisDPadX;
 	static int AxisDPadY;
-
-	static constexpr uint16_t null_cmd			= 0x0000;
-	static constexpr uint16_t close_cmd		= 0x0010;
-	static constexpr uint16_t open_cmd			= 0x0020;
-	static constexpr uint16_t rotate_cmd		= 0x0030;
-
-
 };
 
 int CrMain::ButtonA = 0;
@@ -86,7 +112,8 @@ int CrMain::AxisDPadY = 7;
 
 CrMain::CrMain(void)
 {
-	joy_sub_ = nh_.subscribe<sensor_msgs::Joy>("joy", 10, &CrMain::joyCallback, this);
+	joy_sub = nh_.subscribe<sensor_msgs::Joy>("joy", 10, &CrMain::joyCallback, this);
+	shutdown_sub = nh_.subscribe<std_msgs::Bool>("shutdown", 10, &CrMain::shutdownCallback, this);
 
 	this->hand_cmd_pub = nh_.advertise<std_msgs::UInt16>("hand/cmd", 1);
 	//this->hand_unchuck_thres_pub = nh_.advertise<std_msgs::UInt16>("hand/unchuck_thres", 1);
@@ -116,95 +143,87 @@ CrMain::CrMain(void)
 	nh_.getParam("AxisDPadY", AxisDPadY);
 }
 
+void CrMain::shutdownCallback(const std_msgs::Bool::ConstPtr& msg)
+{
+	if(msg->data)
+	{
+		if(!this->_shutdown)
+		{
+			this->_shutdown = true;
+
+			ROS_INFO("aborting.");
+		}
+
+		hand_cmd_msg.data = (uint16_t)CarrierCommands::shutdown_cmd;
+		hand_cmd_pub.publish(hand_cmd_msg);
+	}
+	else
+	{
+		if(this->_shutdown)
+		{
+			hand_cmd_msg.data = (uint16_t) CarrierCommands::reset_cmd;
+			hand_cmd_pub.publish(hand_cmd_msg);
+
+			this->_shutdown = false;
+		}
+	}
+}
+
 void CrMain::joyCallback(const sensor_msgs::Joy::ConstPtr& joy)
 {
 	static bool last_a = false;
 	static bool last_b = false;
 	static bool last_x = false;
 	static bool last_y = false;
-	static int last_dpadXCmd = 0;
+	//static int last_dpadXCmd = 0;
 
 	bool _a = joy->buttons[ButtonA];
 	bool _b = joy->buttons[ButtonB];
 	bool _x = joy->buttons[ButtonX];
 	bool _y = joy->buttons[ButtonY];
 
-	//hand_cmd_msg.data = null_cmd;
-	if(_a && (_a != last_a))
+	if(!this->_shutdown)
 	{
-		// disarm
-		hand_cmd_msg.data = open_cmd | 0x0001;
-		hand_cmd_pub.publish(hand_cmd_msg);
-	}
-	else if(_b && (_b != last_b))
-	{
-		// arm
-		hand_cmd_msg.data = close_cmd | 0x0001;
-		hand_cmd_pub.publish(hand_cmd_msg);
-	}
-	else if(_x && (_x != last_x))
-	{
-		// launch
-		hand_cmd_msg.data = rotate_cmd | 0x0001;
-		hand_cmd_pub.publish(hand_cmd_msg);
+		if(_a && !last_a)
+		{
+			// chuck all
+			hand_cmd_msg.data = (uint16_t)CarrierCommands::chuck_cmd
+					| (uint16_t)CarrierCommands::chuck0
+					| (uint16_t)CarrierCommands::chuck1
+					| (uint16_t)CarrierCommands::chuck2
+					| (uint16_t)CarrierCommands::chuck3;
+			hand_cmd_pub.publish(hand_cmd_msg);
+		}
+		else if(_b && !last_b)
+		{
+			// unchuck all
+			hand_cmd_msg.data = (uint16_t)CarrierCommands::unchuck_cmd
+					| (uint16_t)CarrierCommands::chuck0
+					| (uint16_t)CarrierCommands::chuck1
+					| (uint16_t)CarrierCommands::chuck2
+					| (uint16_t)CarrierCommands::chuck3;
+			hand_cmd_pub.publish(hand_cmd_msg);
+		}
+		else if(_x && !last_x)
+		{
+			// unchuck 2
+			hand_cmd_msg.data = (uint16_t)CarrierCommands::unchuck_cmd
+					| (uint16_t)CarrierCommands::chuck2 ;
+			hand_cmd_pub.publish(hand_cmd_msg);
+		}
+		else if(_y && !last_y)
+		{
+			// unchuck 0
+			hand_cmd_msg.data = (uint16_t)CarrierCommands::unchuck_cmd
+					| (uint16_t)CarrierCommands::chuck0 ;
+			hand_cmd_pub.publish(hand_cmd_msg);
+		}
 	}
 
 	last_a = _a;
 	last_b = _b;
 	last_x = _x;
 	last_y = _y;
-
-	/*
-
-	double dpadX = -joy->axes[AxisDPadX];
-	int dpadXCmd = 0;
-
-	dpadXCmd = (dpadX > 0.5) ? 1 : (dpadX > -0.5) ? 0 : -1;
-
-	/*
-	if(dpadX > 0.5)
-	{
-		// right for next
-		dpadXCmd = 1;
-	}
-	else if(dpadX > -0.5)
-	{
-		// neutral
-		dpadXCmd = 0;
-	}
-	else
-	{
-		// left for prev
-		dpadXCmd = -1;
-	}
-	*
-
-	if(dpadXCmd != 0 && dpadXCmd != last_dpadXCmd)
-	{
-		if(dpadXCmd == 1)
-		{
-			this->hand_currentThresholdIndex++;
-			if(hand_currentThresholdIndex > 2)
-			{
-				hand_currentThresholdIndex = 2;
-			}
-		}
-		else if(dpadXCmd == -1)
-		{
-			this->hand_currentThresholdIndex--;
-			if(hand_currentThresholdIndex < 0)
-			{
-				hand_currentThresholdIndex = 0;
-			}
-		}
-
-		//this->hand_unchuck_thres_msg.data = this->hand_thresholds[this->hand_currentThresholdIndex];
-		//this->hand_unchuck_thres_pub.publish(this->hand_unchuck_thres_msg);
-	}
-
-	last_dpadXCmd = dpadXCmd;
-
-	*/
 }
 
 
