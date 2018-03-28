@@ -1,33 +1,21 @@
 <launch>
 
+    <!-- Navigation stuff -->
+    <include file="$(find navigation)/launch/navigation.launch">
+        <arg name="use_amcl" value="false" />
+    </include>
     
     <node pkg="nhk2018_main_ros" type="tr_launcher_unitTest" name="main" output="screen">
+        <rosparam param="unchuck_thres">[450, 400, 144]</rosparam>
     </node>
+    <!-- 2000 for tz1 -->
     
     <!-- shutdown controller -->
-    <node pkg="base_controller" type="shutdown_controller" name="shutdown_ctrl" />
+    <!-- node pkg="base_controller" type="shutdown_controller" name="shutdown_ctrl" /-->
     
-    <!-- base itself -->
-    <node pkg="rosserial_server" type="serial_node" name="base">
-<rosparam>
-port: /dev/ttyUSB0
-baud: 57600
-require:
-  publishers: [ base/shutdown ]
-  subscribers: [ motor_cmd_vel, shutdown ]
-</rosparam>
+    <node pkg="nhk2018_main_ros" type="tr_can" name="tr_can" />
+    
+    <!-- usb_can -->
+    <node pkg="nhk2018_main_ros" type="usb_can_node" name="usb_can_node">
     </node>
-    
-    <!-- launcher itself -->
-    <node pkg="rosserial_server" type="serial_node" name="launcher">
-<rosparam>
-port: /dev/ttyUSB1
-baud: 57600
-require:
-  publishers: [  ]
-  subscribers: [ shutdown ]
-</rosparam>
-    </node>
-    
-    <node pkg="rosserial_python" type="message_info_service.py" name="rosserial_message_info" />
 </launch>

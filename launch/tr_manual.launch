@@ -1,30 +1,22 @@
 <launch>
-<rosparam>
-ButtonA: 0
-ButtonB: 1
-ButtonX: 3
-ButtonY: 4
-ButtonLB: 6
-ButtonRB: 7
-ButtonSelect: 11
-ButtonStart: 11
-ButtonLeftThumb: 13
-ButtonRightThumb: 14
-AxisDPadX: 6
-AxisDPadY: 7
-</rosparam>
+<rosparam file="$(find nhk2018_main_ros)/param/joy_assign_wireless.yaml" command="load" />
     <!-- base controller -->
     <node pkg="base_controller" type="base_controller" name="base_ctrl" output="screen">
-       <param name="motor_max_acc" value="100.0" />
-       <param name="motor_max_vel" value="50" />
-       <param name="invert_x" value="true" />
+       <param name="motor_max_acc" value="150.0" />
+       <param name="motor_max_vel" value="100" />
+       <param name="invert_x" value="false" />
        <param name="invert_y" value="false" />
        <param name="invert_z" value="false" />
+       <remap from="motor_cmd_vel" to="base/motor_cmd_vel" />
     </node>
     
     <!-- tr_main -->
-    <node pkg="nhk2018_main_ros" type="nhk2018_main_ros_tr_main" name="tr_main_ctrl" output="screen">
+    <!-- node pkg="nhk2018_main_ros" type="nhk2018_main_ros_tr_main" name="tr_main_ctrl" output="screen">
         <rosparam param="unchuck_thres">[304, 304, 144]</rosparam>
+    </node-->
+    
+    <node pkg="nhk2018_main_ros" type="tr_launcher_unitTest" name="main" output="screen">
+        <rosparam param="unchuck_thres">[2000, 400, 144]</rosparam>
     </node>
     
     <!-- joy teleop -->
@@ -37,29 +29,13 @@ AxisDPadY: 7
     </node>
     
     <!-- shutdown controller -->
-    <node pkg="base_controller" type="shutdown_controller" name="shutdown_ctrl" />
+    <node pkg="base_controller" type="shutdown_controller_joy" name="shutdown_ctrl" />
+
+
+    <node pkg="nhk2018_main_ros" type="tr_can" name="tr_can" />
     
-    <!-- base itself -->
-    <node pkg="rosserial_server" type="serial_node" name="base">
-<rosparam>
-port: /dev/ttyUSB0
-baud: 57600
-require:
-  publishers: [  ]
-  subscribers: [ motor_cmd_vel, shutdown ]
-</rosparam>
+    <!-- usb_can -->
+    <node pkg="nhk2018_main_ros" type="usb_can_node" name="usb_can_node">
     </node>
     
-    <!-- base itself -->
-    <node pkg="rosserial_server" type="serial_node" name="launcher">
-<rosparam>
-port: /dev/ttyUSB1
-baud: 57600
-require:
-  publishers: [  ]
-  subscribers: [ shutdown ]
-</rosparam>
-    </node>
-    
-    <node pkg="rosserial_python" type="message_info_service.py" name="rosserial_message_info" />
 </launch>

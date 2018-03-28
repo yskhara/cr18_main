@@ -1,23 +1,10 @@
 <launch>
-<rosparam>
-ButtonA: 0
-ButtonB: 1
-ButtonX: 3
-ButtonY: 4
-ButtonLB: 6
-ButtonRB: 7
-ButtonSelect: 11
-ButtonStart: 11
-ButtonLeftThumb: 13
-ButtonRightThumb: 14
-AxisDPadX: 6
-AxisDPadY: 7
-</rosparam>
+<rosparam file="$(find nhk2018_main_ros)/param/joy_assign_wireless.yaml" command="load" />
     <!-- base controller -->
     <node pkg="base_controller" type="base_controller" name="base_ctrl" output="screen">
-       <param name="motor_max_acc" value="100.0" />
-       <param name="motor_max_vel" value="50" />
-       <param name="invert_x" value="true" />
+       <param name="motor_max_acc" value="130.0" />
+       <param name="motor_max_vel" value="60.0" />
+       <param name="invert_x" value="false" />
        <param name="invert_y" value="true" />
        <param name="invert_z" value="false" />
     </node>

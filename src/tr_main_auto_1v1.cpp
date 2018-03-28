@@ -16,6 +16,8 @@
 #include <vector>
 #include <string>
 
+//#include <nhk2018_main_ros/CanFrame.h>
+
 class Command
 {
 
