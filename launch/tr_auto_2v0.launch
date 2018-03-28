@@ -1,32 +1,22 @@
 <launch>
-<rosparam>
-ButtonA: 0
-ButtonB: 1
-ButtonX: 3
-ButtonY: 4
-ButtonLB: 6
-ButtonRB: 7
-ButtonSelect: 11
-ButtonStart: 11
-ButtonLeftThumb: 13
-ButtonRightThumb: 14
-AxisDPadX: 6
-AxisDPadY: 7
-</rosparam>
+<rosparam file="$(find nhk2018_main_ros)/param/joy_assign_wireless.yaml" command="load" />
+
     <!-- arg name="use_sim_time" default="false"/>
     <param name="use_sim_time" value="$(arg use_sim_time" /-->
     <arg name="use_joy" value="true" />
     
     <!-- base controller -->
     <node pkg="base_controller" type="base_controller" name="base_ctrl" output="screen">
-       <param name="motor_max_acc" value="100.0" />
-       <param name="motor_max_vel" value="50" />
+       <param name="motor_max_acc" value="150.0" />
+       <param name="motor_max_vel" value="150.0" />
        <param name="invert_x" value="false" />
-       <param name="invert_y" value="true" />
+       <param name="invert_y" value="false" />
        <param name="invert_z" value="false" />
+       <remap from="motor_cmd_vel" to="base/motor_cmd_vel" />
     </node>
     
     <include file="$(find navigation)/launch/navigation.launch">
+        <arg name="use_amcl" value="false" />
         <arg name="map_file" value="$(find navigation)/map/abu2018_map.yaml" />
     </include>
 
@@ -36,19 +26,23 @@ AxisDPadY: 7
         <rosparam param="unchuck_thres">[450, 400, 144]</rosparam>
     </node -->
     
+    <node pkg="nhk2018_main_ros" type="tr_main_auto_2v0" name="main" output="screen">
+        <rosparam param="unchuck_thres">[450, 450, 460]</rosparam>
+    </node>
+    <!-- 20180325 : 450, 460, 460 -->
     
     <!-- joy teleop -->
-    <node pkg="base_controller" type="base_teleop_joy" name="base_teleop_joy"/>
+    <!--node pkg="base_controller" type="base_teleop_joy" name="base_teleop_joy"/-->
     
     <!-- joy node -->
-    <node respawn="true" pkg="joy" type="joy_node" name="joy_node" >
+    <!-- node respawn="true" pkg="joy" type="joy_node" name="joy_node" >
         <param name="dev" type="string" value="/dev/input/js0" />
         <param name="deadzone" value="0.12" />
-    </node>
+    </node-->
     
     
     <!-- shutdown controller -->
-    <node pkg="base_controller" type="shutdown_controller_joy" name="shutdown_ctrl_joy" />
+    <!-- node pkg="base_controller" type="shutdown_controller_joy" name="shutdown_ctrl_joy" /-->
     
     <!--node pkg="tf" type="static_transform_publisher" name="base_to_laser_link" args="0 0 0 0 0 0 base_link laser_link 100"/-->
     

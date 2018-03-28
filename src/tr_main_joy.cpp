@@ -26,6 +26,19 @@ static constexpr int AxisDPadX = 6;
 static constexpr int AxisDPadY = 7;
 */
 
+enum class LauncherCommands : uint16_t
+{
+	shutdown_cmd		= 0x0000,
+	reset_cmd			= 0x0001,
+
+	disarm_cmd			= 0x0010,
+	receive_cmd			= 0x0011,
+	launch_cmd			= 0x0014,
+
+	set_thres_cmd		= 0x4000,
+	set_thres_mask		= 0xcfff,
+};
+
 class TrMain
 {
 public:
@@ -60,14 +73,7 @@ private:
 	static int ButtonRightThumb;
 
 	static int AxisDPadX;
-	static int AxisDPadY;
-
-	static constexpr uint16_t null_cmd			= 0x0000;
-	static constexpr uint16_t disarm_cmd		= 0x0001;
-	static constexpr uint16_t arm_cmd			= 0x0002;
-	static constexpr uint16_t launch_cmd		= 0x0004;
-
-
+	static int AxisDPadY;\
 };
 
 int TrMain::ButtonA = 0;
@@ -133,19 +139,19 @@ void TrMain::joyCallback(const sensor_msgs::Joy::ConstPtr& joy)
 	if(_a && (_a != last_a))
 	{
 		// disarm
-		launcher_cmd_msg.data = disarm_cmd;
+		launcher_cmd_msg.data = (uint16_t)LauncherCommands::disarm_cmd;
 		launcher_cmd_pub.publish(launcher_cmd_msg);
 	}
 	else if(_b && (_b != last_b))
 	{
 		// arm
-		launcher_cmd_msg.data = arm_cmd;
+		launcher_cmd_msg.data = (uint16_t)LauncherCommands::receive_cmd;
 		launcher_cmd_pub.publish(launcher_cmd_msg);
 	}
 	else if(_x && (_x != last_x))
 	{
 		// launch
-		launcher_cmd_msg.data = launch_cmd;
+		launcher_cmd_msg.data = (uint16_t)LauncherCommands::launch_cmd;
 		launcher_cmd_pub.publish(launcher_cmd_msg);
 	}
 
