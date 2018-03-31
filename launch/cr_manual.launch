@@ -1,5 +1,5 @@
 <launch>
-<rosparam file="$(find nhk2018_main_ros)/param/joy_assign_wireless.yaml" command="load" />
+<rosparam file="$(find nhk2018_main_ros)/param/joy_assign_wired.yaml" command="load" />
     <!-- base controller -->
     <node pkg="base_controller" type="base_controller" name="base_ctrl" output="screen">
        <param name="motor_max_acc" value="130.0" />

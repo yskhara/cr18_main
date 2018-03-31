@@ -240,32 +240,29 @@ TrMain::TrMain(void)
 	this->command_list.clear();
 	this->command_list.push_back(ControllerCommands::standby);
 
+//#define UNIT_TEST
+//#define TZ1_TEST
+#define FULL_OP
+
+#ifdef UNIT_TEST
+	// repeat from here
+	this->command_list.push_back(ControllerCommands::segno);
 	// receive at dp1
-	this->command_list.push_back(ControllerCommands::sz_to_dp1);
 	this->command_list.push_back(ControllerCommands::dp_receive);
 	this->command_list.push_back(ControllerCommands::delay);
 
 	// throw at tz1
-	this->command_list.push_back(ControllerCommands::dp1_to_tz1);
-	/*
 	this->command_list.push_back(ControllerCommands::set_tz1);
 	this->command_list.push_back(ControllerCommands::tz_throw);
-	//this->command_list.push_back(ControllerCommands::delay);
 	this->command_list.push_back(ControllerCommands::disarm);
-	*/
-	this->command_list.push_back(ControllerCommands::dp_receive);
-	this->command_list.push_back(ControllerCommands::delay);
 
+	// repeat from here
+	this->command_list.push_back(ControllerCommands::dal_segno);
+#endif
+
+#ifdef TZ1_TEST
 	// receive at dp1
-	this->command_list.push_back(ControllerCommands::tz1_to_dp1);
-	this->command_list.push_back(ControllerCommands::dp_receive);
-	this->command_list.push_back(ControllerCommands::delay);
-
-	this->command_list.push_back(ControllerCommands::dp1_to_tz2);
-	this->command_list.push_back(ControllerCommands::dp_receive);
-	this->command_list.push_back(ControllerCommands::delay);
-
-	this->command_list.push_back(ControllerCommands::tz2_to_dp2);
+	this->command_list.push_back(ControllerCommands::sz_to_dp1);
 
 	// repeat from here
 	this->command_list.push_back(ControllerCommands::segno);
@@ -273,14 +270,62 @@ TrMain::TrMain(void)
 	this->command_list.push_back(ControllerCommands::dp_receive);
 	this->command_list.push_back(ControllerCommands::delay);
 
-	this->command_list.push_back(ControllerCommands::dp2_to_tz3);
+	// throw at tz1
+	this->command_list.push_back(ControllerCommands::dp1_to_tz1);
+	this->command_list.push_back(ControllerCommands::set_tz1);
+	this->command_list.push_back(ControllerCommands::tz_throw);
+	this->command_list.push_back(ControllerCommands::disarm);
+
+	// receive at dp1
+	this->command_list.push_back(ControllerCommands::tz1_to_dp1);
+
+	// repeat forever
+	this->command_list.push_back(ControllerCommands::dal_segno);
+#endif
+
+#ifdef FULL_OP
+	// receive at dp1
+	this->command_list.push_back(ControllerCommands::sz_to_dp1);
 	this->command_list.push_back(ControllerCommands::dp_receive);
 	this->command_list.push_back(ControllerCommands::delay);
+
+	// throw at tz1
+	this->command_list.push_back(ControllerCommands::dp1_to_tz1);
+	this->command_list.push_back(ControllerCommands::set_tz1);
+	this->command_list.push_back(ControllerCommands::tz_throw);
+	this->command_list.push_back(ControllerCommands::disarm);
+
+	// receive at dp1
+	this->command_list.push_back(ControllerCommands::tz1_to_dp1);
+	this->command_list.push_back(ControllerCommands::dp_receive);
+	this->command_list.push_back(ControllerCommands::delay);
+
+	// throw at tz2
+	this->command_list.push_back(ControllerCommands::dp1_to_tz2);
+	this->command_list.push_back(ControllerCommands::set_tz2);
+	this->command_list.push_back(ControllerCommands::tz_throw);
+	this->command_list.push_back(ControllerCommands::disarm);
+
+	this->command_list.push_back(ControllerCommands::tz2_to_dp2);
+
+	// repeat from here
+	this->command_list.push_back(ControllerCommands::segno);
+
+	// receive at dp2
+	this->command_list.push_back(ControllerCommands::dp_receive);
+	this->command_list.push_back(ControllerCommands::delay);
+
+	// throw at tz3
+	this->command_list.push_back(ControllerCommands::dp2_to_tz3);
+	this->command_list.push_back(ControllerCommands::set_tz3);
+	this->command_list.push_back(ControllerCommands::tz_throw);
+	this->command_list.push_back(ControllerCommands::disarm);
 
 	this->command_list.push_back(ControllerCommands::tz3_to_dp2);
 
 	// repeat forever
 	this->command_list.push_back(ControllerCommands::dal_segno);
+#endif
 
 	//this->command_list.push_back(ControllerCommands::shutdown);
 
@@ -601,7 +646,7 @@ void TrMain::control_timer_callback(const ros::TimerEvent& event)
 		}
 		else
 		{
-			this->publish_path(Coordinates::GetInstance()->get_tr_sz(), Coordinates::GetInstance()->get_tr_vp1(), Coordinates::GetInstance()->get_tr_dp1());
+			this->publish_path(Coordinates::GetInstance()->get_tr_sz(), Coordinates::GetInstance()->get_tr_wp1(), Coordinates::GetInstance()->get_tr_dp1());
 
 			this->_goal_reached = false;
 			this->_is_moving = true;
@@ -621,7 +666,7 @@ void TrMain::control_timer_callback(const ros::TimerEvent& event)
 		}
 		else
 		{
-			this->publish_path(Coordinates::GetInstance()->get_tr_sz(), Coordinates::GetInstance()->get_tr_vp2(), Coordinates::GetInstance()->get_tr_dp2());
+			this->publish_path(Coordinates::GetInstance()->get_tr_sz(), Coordinates::GetInstance()->get_tr_wp2(), Coordinates::GetInstance()->get_tr_dp2());
 
 			this->_goal_reached = false;
 			this->_is_moving = true;
@@ -661,7 +706,7 @@ void TrMain::control_timer_callback(const ros::TimerEvent& event)
 		}
 		else
 		{
-			this->publish_path(Coordinates::GetInstance()->get_tr_dp1(), Coordinates::GetInstance()->get_tr_vp2(), Coordinates::GetInstance()->get_tr_tz2());
+			this->publish_path(Coordinates::GetInstance()->get_tr_dp1(), Coordinates::GetInstance()->get_tr_wp2(), Coordinates::GetInstance()->get_tr_tz2());
 
 			this->_goal_reached = false;
 			this->_is_moving = true;
