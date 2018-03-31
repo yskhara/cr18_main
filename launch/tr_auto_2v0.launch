@@ -16,7 +16,7 @@
     </node>
     
     <include file="$(find navigation)/launch/navigation.launch">
-        <arg name="use_amcl" value="false" />
+        <arg name="use_amcl" value="true" />
         <arg name="map_file" value="$(find navigation)/map/abu2018_map.yaml" />
         <arg name="odom_x_coeff" value="1.0" />
         <arg name="odom_y_coeff" value="1.0" />
