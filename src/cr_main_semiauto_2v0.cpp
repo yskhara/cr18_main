@@ -185,7 +185,7 @@ private:
 	// flags
 	//bool _start_pressed = false;
 	bool _next_pressed = false;
-	bool _repeat_pressed = false;
+	bool _abort_pressed = false;
 	//bool _is_moving = false;
 	//bool _is_throwing = false;
 	//bool _is_receiving = false;
@@ -197,7 +197,7 @@ private:
 	{
 		//_start_pressed = false;
 		_next_pressed = false;
-		_repeat_pressed = false;
+		_abort_pressed = false;
 		//_is_moving = false;
 		//_is_throwing = false;
 		//_is_receiving = false;
@@ -248,14 +248,14 @@ CrMain::CrMain(void)
 	joy_sub = nh_.subscribe<sensor_msgs::Joy>("joy", 10, &CrMain::joyCallback, this);
 	//this->shutdown_sub = nh_.subscribe<std_msgs::Bool>("shutdown", 10, &TrMain::shutdownCallback, this);
 
-	this->hand_cmd_pub = nh_.advertise<std_msgs::UInt16>("hand/cmd", 1);
-	this->base_cmd_pub = nh_.advertise<std_msgs::UInt16>("base/cmd", 1);
+	this->hand_cmd_pub = nh_.advertise<std_msgs::UInt16>("hand/cmd", 10);
+	this->base_cmd_pub = nh_.advertise<std_msgs::UInt16>("base/cmd", 10);
 
 	this->goal_reached_sub = nh_.subscribe<std_msgs::Bool>("goal_reached", 10, &CrMain::goalReachedCallback, this);
-	this->target_pub = nh_.advertise<nav_msgs::Path>("target_path", 1);
-	this->abort_pub = nh_.advertise<std_msgs::Bool>("abort", 1);
+	this->target_pub = nh_.advertise<nav_msgs::Path>("target_path", 10);
+	this->abort_pub = nh_.advertise<std_msgs::Bool>("abort", 10);
 
-	this->initialpose_pub = nh_.advertise<geometry_msgs::PoseWithCovarianceStamped>("/initialpose", 1);
+	this->initialpose_pub = nh_.advertise<geometry_msgs::PoseWithCovarianceStamped>("/initialpose", 10);
 
 	auto private_nh = ros::NodeHandle("~");
 	private_nh.param("amt_coeff", this->_amt_coeff, 0.25);
@@ -447,7 +447,7 @@ void CrMain::joyCallback(const sensor_msgs::Joy::ConstPtr& joy)
 	}
 	else if(_b && !last_b)
 	{
-		this->_repeat_pressed = true;
+		this->_abort_pressed = true;
 	}
 	else if(_x && !last_x)
 	{
@@ -699,17 +699,15 @@ void CrMain::control_timer_callback(const ros::TimerEvent& event)
 		{
 			if(this->_next_pressed)
 			{
-				//chuck_all();
-
-				// maybe it's a bad idea...
-				//clear_flags();
+				clear_flags();
+				this->_next_pressed = true;
 				this->_status = CRControllerStatus::pp_pickingup;
 
 				this->currentCommandIndex++;
-				ROS_INFO("goal reached : pp1 (user input)");
+				ROS_INFO("goal reached : pp1 (operator input)");
 				//ROS_INFO("picked up shuttles.");
 			}
-			else if(this->_goal_reached)
+			else if(this->_abort_pressed || this->_goal_reached)
 			{
 				//chuck_all();
 
@@ -734,7 +732,7 @@ void CrMain::control_timer_callback(const ros::TimerEvent& event)
 	{
 		if(this->_status == CRControllerStatus::moving)
 		{
-			if(this->_goal_reached)
+			if(this->_abort_pressed || this->_goal_reached)
 			{
 				clear_flags();
 				this->_status = CRControllerStatus::motion_cplt;
@@ -780,7 +778,7 @@ void CrMain::control_timer_callback(const ros::TimerEvent& event)
 	{
 		if(this->_status == CRControllerStatus::moving)
 		{
-			if(this->_goal_reached)
+			if(this->_abort_pressed || this->_goal_reached)
 			{
 				clear_flags();
 				this->_status = CRControllerStatus::motion_cplt;
@@ -835,10 +833,10 @@ void CrMain::control_timer_callback(const ros::TimerEvent& event)
 				this->_status = CRControllerStatus::pp_pickingup;
 
 				this->currentCommandIndex++;
-				ROS_INFO("goal reached : pp2");
+				ROS_INFO("goal reached : pp2 (operator input)");
 				//ROS_INFO("picked up shuttles.");
 			}
-			else if(this->_goal_reached)
+			else if(this->_abort_pressed || this->_goal_reached)
 			{
 				clear_flags();
 				this->_status = CRControllerStatus::motion_cplt;
@@ -915,7 +913,7 @@ void CrMain::control_timer_callback(const ros::TimerEvent& event)
 	{
 		if(this->_status == CRControllerStatus::pp_pickingup)
 		{
-			if(this->_next_pressed || this->_repeat_pressed)
+			if(this->_next_pressed)
 			{
 				this->chuck_all();
 
@@ -923,7 +921,7 @@ void CrMain::control_timer_callback(const ros::TimerEvent& event)
 				this->_status = CRControllerStatus::motion_cplt;
 
 				this->currentCommandIndex++;
-				ROS_INFO("picked up shuttles");
+				ROS_INFO("picked up shuttles.");
 			}
 		}
 		else

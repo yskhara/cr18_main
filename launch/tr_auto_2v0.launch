@@ -7,8 +7,8 @@
     
     <!-- base controller -->
     <node pkg="base_controller" type="base_controller" name="base_ctrl" output="screen">
-       <param name="motor_max_acc" value="150.0" />
-       <param name="motor_max_vel" value="150.0" />
+       <param name="motor_max_acc" value="300.0" />
+       <param name="motor_max_vel" value="200.0" />
        <param name="invert_x" value="false" />
        <param name="invert_y" value="false" />
        <param name="invert_z" value="false" />
@@ -32,7 +32,7 @@
     </node -->
     
     <node pkg="nhk2018_main_ros" type="tr_main_auto_2v0" name="main" output="screen">
-        <rosparam param="unchuck_thres">[460, 455, 455]</rosparam>
+        <rosparam param="unchuck_thres">[470, 460, 455]</rosparam>
     </node>
     <!-- 20180325 : 450, 460, 460 -->
     
