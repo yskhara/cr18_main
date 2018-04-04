@@ -344,6 +344,7 @@ CrMain::CrMain(void)
 	// deliver at dp2 for tz3
 	this->command_list.push_back(CRControllerCommands::pp2_to_dp2);
 	this->command_list.push_back(CRControllerCommands::dp1_deliver);
+	this->command_list.push_back(CRControllerCommands::pp_pickup);
 	this->command_list.push_back(CRControllerCommands::shutdown);
 #endif
 
@@ -965,7 +966,7 @@ void CrMain::control_timer_callback(const ros::TimerEvent& event)
 				_tmp_wp.orientation = _dp1_tz1.orientation;
 
 				_dp1_tz2.position.x = _dp1_tz1.position.x - 0.200;
-				_dp1_tz2.position.y = _dp1_tz1.position.y - 0.300;
+				_dp1_tz2.position.y = _dp1_tz1.position.y - 0.300 - 0.025;	// tolerance?
 				_dp1_tz2.orientation = _dp1_tz1.orientation;
 
 				this->publish_path(_dp1_tz1, _tmp_wp, _dp1_tz2);

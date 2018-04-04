@@ -243,6 +243,7 @@ TrMain::TrMain(void)
 //#define UNIT_TEST
 //#define TZ1_TEST
 #define FULL_OP
+//#define TZ3_TEST
 
 #ifdef UNIT_TEST
 	// repeat from here
@@ -322,6 +323,20 @@ TrMain::TrMain(void)
 	this->command_list.push_back(ControllerCommands::disarm);
 
 	this->command_list.push_back(ControllerCommands::tz3_to_dp2);
+
+	// repeat forever
+	this->command_list.push_back(ControllerCommands::dal_segno);
+#endif
+
+#ifdef TZ3_TEST
+
+	this->command_list.push_back(ControllerCommands::segno);
+
+	this->command_list.push_back(ControllerCommands::dp_receive);
+	this->command_list.push_back(ControllerCommands::delay);
+	this->command_list.push_back(ControllerCommands::set_tz3);
+	this->command_list.push_back(ControllerCommands::tz_throw);
+	this->command_list.push_back(ControllerCommands::disarm);
 
 	// repeat forever
 	this->command_list.push_back(ControllerCommands::dal_segno);
@@ -483,8 +498,10 @@ void TrMain::restart(void)
 	base_cmd_msg.data = (uint16_t)BaseCommands::reset_cmd;
 	base_cmd_pub.publish(base_cmd_msg);
 
+#ifdef FULL_OP
 	base_cmd_msg.data = (uint16_t)BaseCommands::operational_cmd;
 	base_cmd_pub.publish(base_cmd_msg);
+#endif
 
 	//this->disarm();
 

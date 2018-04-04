@@ -32,9 +32,13 @@
     </node -->
     
     <node pkg="nhk2018_main_ros" type="tr_main_auto_2v0" name="main" output="screen">
-        <rosparam param="unchuck_thres">[470, 460, 455]</rosparam>
+        <!--
+        <rosparam param="unchuck_thres">[540, 540, 200]</rosparam>
+        -->
+        <rosparam param="unchuck_thres">[540, 540, 540]</rosparam>
     </node>
-    <!-- 20180325 : 450, 460, 460 -->
+    <!-- 540 くらいが実用的な限界です -->
+    <!-- 20180401 : , , 300 -->
     
     <!-- joy teleop -->
     <!--node pkg="base_controller" type="base_teleop_joy" name="base_teleop_joy"/-->

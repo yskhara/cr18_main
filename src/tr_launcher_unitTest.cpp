@@ -70,6 +70,8 @@ enum class LauncherStatus : uint16_t
 	armed				= 0x0012,
 	launching			= 0x0013,
 	launch_cplt			= 0x0014,
+
+	sensing				= 0x0020,
 };
 
 enum class LauncherCommands : uint16_t
@@ -81,8 +83,10 @@ enum class LauncherCommands : uint16_t
 	receive_cmd			= 0x0011,
 	launch_cmd			= 0x0014,
 
+	sense_cmd			= 0x0020,
+
 	set_thres_cmd		= 0x4000,
-	set_thres_mask		= 0xcfff,
+	set_thres_mask		= 0x3fff,
 };
 
 enum class BaseStatus : uint16_t

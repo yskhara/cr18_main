@@ -497,7 +497,7 @@ void UsbCanNode::canTxCallback(const can_msgs::CanFrame::ConstPtr &msg)
 		}
 	}
 
-	// add carrage return (slcan EOL)
+	// add carriage return (slcan EOL)
 	str_buf[i++] = '\r';
 
 	this->_port->write_some(buffer(str_buf, i));
@@ -510,7 +510,7 @@ void UsbCanNode::receive(void)
 	boost::asio::async_read(
 			*_port,
 			_receive_buffer,
-			boost::asio::transfer_at_least(1), // receive atleast one byte
+			boost::asio::transfer_at_least(1), // receive at least one byte
 			boost::bind(&UsbCanNode::onReceive, this, boost::asio::placeholders::error));
 }
 
