@@ -7,8 +7,8 @@
     
     <!-- base controller -->
     <node pkg="base_controller" type="base_controller" name="base_ctrl" output="screen">
-       <param name="motor_max_acc" value="150.0" />
-       <param name="motor_max_vel" value="150.0" />
+       <param name="motor_max_acc" value="600.0" />
+       <param name="motor_max_vel" value="200.0" />
        <param name="invert_x" value="false" />
        <param name="invert_y" value="false" />
        <param name="invert_z" value="false" />
@@ -16,7 +16,7 @@
     </node>
     
     <include file="$(find navigation)/launch/navigation.launch">
-        <arg name="use_amcl" value="false" />
+        <arg name="use_amcl" value="true" />
         <arg name="map_file" value="$(find navigation)/map/abu2018_map.yaml" />
         <arg name="odom_x_coeff" value="1.0" />
         <arg name="odom_y_coeff" value="1.0" />
@@ -32,9 +32,21 @@
     </node -->
     
     <node pkg="nhk2018_main_ros" type="tr_main_auto_2v0" name="main" output="screen">
-        <rosparam param="unchuck_thres">[460, 455, 455]</rosparam>
+        <!--
+        <rosparam param="unchuck_thres">[540, 540, 200]</rosparam>
+        -->
+        <rosparam param="unchuck_thres">[280, 280, 250]</rosparam>
+        <param name="op_mode" value="full_op" />
     </node>
-    <!-- 20180325 : 450, 460, 460 -->
+    <!-- 540 くらいが実用的な限界です -->
+    <!-- 
+        金曜，土曜でとった : TZ1はR3, TZ2にはR2を使用した. 
+        TZ1: 300
+        TZ2: 300
+        TZ3: 255
+        8日の撮影では前半250
+        途中から245
+    -->
     
     <!-- joy teleop -->
     <!--node pkg="base_controller" type="base_teleop_joy" name="base_teleop_joy"/-->
@@ -52,9 +64,10 @@
     <!--node pkg="tf" type="static_transform_publisher" name="base_to_laser_link" args="0 0 0 0 0 0 base_link laser_link 100"/-->
     
 
-    <node pkg="nhk2018_main_ros" type="tr_can" name="tr_can" />
+    <node pkg="nhk2018_main_ros" type="tr_can" name="tr_can" respawn="true" />
     
     <!-- usb_can -->
-    <node pkg="nhk2018_main_ros" type="usb_can_node" name="usb_can_node">
+    <node pkg="nhk2018_main_ros" type="usb_can_node" name="usb_can_node" respawn="true" output="screen">
+        <param name="port" value="/dev/ttyUSBCAN" />
     </node>
 </launch>

@@ -9,8 +9,8 @@
     
     <!-- base controller -->
     <node pkg="base_controller" type="base_controller" name="base_ctrl" output="screen">
-       <param name="motor_max_acc" value="150.0" />
-       <param name="motor_max_vel" value="150.0" />
+       <param name="motor_max_acc" value="300.0" />
+       <param name="motor_max_vel" value="200.0" />
        <param name="invert_x" value="false" />
        <param name="invert_y" value="true" />
        <param name="invert_z" value="false" />

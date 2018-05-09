@@ -58,11 +58,22 @@ enum class ControllerCommands : uint16_t
 	dp2_to_tz2,						// move from DP2 to TZ2
 	dp2_to_tz3,						// move from DP2 to TZ3
 
+	set_delay_250ms,
+	set_delay_500ms,
+	set_delay_1s,
+
 	disarm,
 	delay,
 
 	segno,
 	dal_segno,
+};
+
+enum class OpMode
+{
+	full_op,
+	unittest,
+	tz2_test
 };
 
 enum class LauncherStatus : uint16_t
@@ -72,9 +83,11 @@ enum class LauncherStatus : uint16_t
 
 	disarmed			= 0x0010,
 	receiving			= 0x0011,
-	armed				= 0x0012,
-	launching			= 0x0013,
-	launch_cplt			= 0x0014,
+	received			= 0x0012,
+	arming				= 0x0013,
+	armed				= 0x0014,
+	launching			= 0x0015,
+	launch_cplt			= 0x0016,
 
 	sensing				= 0x0020,
 };
@@ -86,6 +99,7 @@ enum class LauncherCommands : uint16_t
 
 	disarm_cmd			= 0x0010,
 	receive_cmd			= 0x0011,
+//	arm_cmd				= 0x0013,
 	launch_cmd			= 0x0014,
 
 	sense_cmd			= 0x0020,
@@ -152,6 +166,7 @@ private:
 
 	//uint16_t launcher_threshold = 0x0100;
 	std::vector<int> launcher_thresholds;
+	OpMode _op_mode;
 
 	double _receive_delay_s;
 
@@ -186,6 +201,7 @@ private:
 	bool _start_pressed = false;
 	bool _launch_completed = false;
 	bool _shuttle_received = false;
+	bool _armed = false;
 	bool _is_moving = false;
 	bool _is_throwing = false;
 	bool _is_receiving = false;
@@ -197,6 +213,7 @@ private:
 		//_start_pressed = false;
 		_launch_completed = false;
 		_shuttle_received = false;
+		_armed = false;
 		_is_moving = false;
 		_is_throwing = false;
 		_is_receiving = false;
@@ -232,115 +249,140 @@ TrMain::TrMain(void)
 	}
 	ROS_INFO("thresholds: %d, %d, %d", this->launcher_thresholds[0], this->launcher_thresholds[1], this->launcher_thresholds[2]);
 
+
+	std::string op_mode;
+	nh_priv.param("op_mode", op_mode, std::string("full_op"));
+
+	if(op_mode == "full_op")
+	{
+		this->_op_mode = OpMode::full_op;
+		ROS_INFO("operation mode set to full_op.");
+	}
+	else if(op_mode == "unittest")
+	{
+		this->_op_mode = OpMode::unittest;
+		ROS_INFO("operation mode set to unit test mode.");
+	}
+	else if(op_mode == "tz2_test")
+	{
+		this->_op_mode = OpMode::tz2_test;
+		ROS_INFO("operation mode set to tz2 test mode.");
+	}
+
 	if(!nh_priv.getParam("receive_delay", _receive_delay_s))
 	{
 		_receive_delay_s = 1.25;
 	}
 
 	this->command_list.clear();
-	this->command_list.push_back(ControllerCommands::standby);
 
-//#define UNIT_TEST
-//#define TZ1_TEST
-#define FULL_OP
+	if (this->_op_mode == OpMode::full_op)
+	{
+		this->command_list.push_back(ControllerCommands::standby);
 
-#ifdef UNIT_TEST
-	// repeat from here
-	this->command_list.push_back(ControllerCommands::segno);
-	// receive at dp1
-	this->command_list.push_back(ControllerCommands::dp_receive);
-	this->command_list.push_back(ControllerCommands::delay);
+		// receive at dp1
+		this->command_list.push_back(ControllerCommands::sz_to_dp1);
+		this->command_list.push_back(ControllerCommands::dp_receive);
+		this->command_list.push_back(ControllerCommands::set_delay_500ms);
+		this->command_list.push_back(ControllerCommands::delay);
+		this->command_list.push_back(ControllerCommands::set_delay_500ms);
+		this->command_list.push_back(ControllerCommands::delay);
 
-	// throw at tz1
-	this->command_list.push_back(ControllerCommands::set_tz1);
-	this->command_list.push_back(ControllerCommands::tz_throw);
-	this->command_list.push_back(ControllerCommands::disarm);
+		// throw at tz1
+		this->command_list.push_back(ControllerCommands::dp1_to_tz1);
+		this->command_list.push_back(ControllerCommands::set_tz1);
+		this->command_list.push_back(ControllerCommands::tz_throw);
+		this->command_list.push_back(ControllerCommands::disarm);
 
-	// repeat from here
-	this->command_list.push_back(ControllerCommands::dal_segno);
-#endif
+		// receive at dp1
+		this->command_list.push_back(ControllerCommands::tz1_to_dp1);
+		this->command_list.push_back(ControllerCommands::dp_receive);
+		this->command_list.push_back(ControllerCommands::set_delay_500ms);
+		this->command_list.push_back(ControllerCommands::delay);
+		this->command_list.push_back(ControllerCommands::set_delay_500ms);
+		this->command_list.push_back(ControllerCommands::delay);
+		this->command_list.push_back(ControllerCommands::set_delay_500ms);
+		this->command_list.push_back(ControllerCommands::delay);
 
-#ifdef TZ1_TEST
-	// receive at dp1
-	this->command_list.push_back(ControllerCommands::sz_to_dp1);
+		// throw at tz2
+		this->command_list.push_back(ControllerCommands::dp1_to_tz2);
+		this->command_list.push_back(ControllerCommands::set_tz2);
+		this->command_list.push_back(ControllerCommands::tz_throw);
+		this->command_list.push_back(ControllerCommands::disarm);
 
-	// repeat from here
-	this->command_list.push_back(ControllerCommands::segno);
+		this->command_list.push_back(ControllerCommands::tz2_to_dp2);
 
-	this->command_list.push_back(ControllerCommands::dp_receive);
-	this->command_list.push_back(ControllerCommands::delay);
+		// repeat from here
+		this->command_list.push_back(ControllerCommands::segno);
 
-	// throw at tz1
-	this->command_list.push_back(ControllerCommands::dp1_to_tz1);
-	this->command_list.push_back(ControllerCommands::set_tz1);
-	this->command_list.push_back(ControllerCommands::tz_throw);
-	this->command_list.push_back(ControllerCommands::disarm);
+		// receive at dp2
+		this->command_list.push_back(ControllerCommands::dp_receive);
+		this->command_list.push_back(ControllerCommands::set_delay_500ms);
+		this->command_list.push_back(ControllerCommands::delay);
+		this->command_list.push_back(ControllerCommands::set_delay_500ms);
+		this->command_list.push_back(ControllerCommands::delay);
 
-	// receive at dp1
-	this->command_list.push_back(ControllerCommands::tz1_to_dp1);
+		// throw at tz3
+		this->command_list.push_back(ControllerCommands::dp2_to_tz3);
+		this->command_list.push_back(ControllerCommands::set_tz3);
+		this->command_list.push_back(ControllerCommands::tz_throw);
+		this->command_list.push_back(ControllerCommands::disarm);
 
-	// repeat forever
-	this->command_list.push_back(ControllerCommands::dal_segno);
-#endif
+		this->command_list.push_back(ControllerCommands::tz3_to_dp2);
 
-#ifdef FULL_OP
-	// receive at dp1
-	this->command_list.push_back(ControllerCommands::sz_to_dp1);
-	this->command_list.push_back(ControllerCommands::dp_receive);
-	this->command_list.push_back(ControllerCommands::delay);
+		// repeat forever
+		this->command_list.push_back(ControllerCommands::dal_segno);
+	}
+	else if(this->_op_mode == OpMode::unittest)
+	{
+		this->command_list.push_back(ControllerCommands::standby);
 
-	// throw at tz1
-	this->command_list.push_back(ControllerCommands::dp1_to_tz1);
-	this->command_list.push_back(ControllerCommands::set_tz1);
-	this->command_list.push_back(ControllerCommands::tz_throw);
-	this->command_list.push_back(ControllerCommands::disarm);
+		this->command_list.push_back(ControllerCommands::segno);
 
-	// receive at dp1
-	this->command_list.push_back(ControllerCommands::tz1_to_dp1);
-	this->command_list.push_back(ControllerCommands::dp_receive);
-	this->command_list.push_back(ControllerCommands::delay);
+		this->command_list.push_back(ControllerCommands::dp_receive);
+		this->command_list.push_back(ControllerCommands::delay);
+		this->command_list.push_back(ControllerCommands::set_tz1);
+		this->command_list.push_back(ControllerCommands::tz_throw);
+		this->command_list.push_back(ControllerCommands::disarm);
 
-	// throw at tz2
-	this->command_list.push_back(ControllerCommands::dp1_to_tz2);
-	this->command_list.push_back(ControllerCommands::set_tz2);
-	this->command_list.push_back(ControllerCommands::tz_throw);
-	this->command_list.push_back(ControllerCommands::disarm);
+		// repeat forever
+		this->command_list.push_back(ControllerCommands::dal_segno);
+	}
+	else if(this->_op_mode == OpMode::tz2_test)
+	{
+		this->command_list.push_back(ControllerCommands::standby);
 
-	this->command_list.push_back(ControllerCommands::tz2_to_dp2);
+		// receive at dp1
+		this->command_list.push_back(ControllerCommands::sz_to_dp2);
 
-	// repeat from here
-	this->command_list.push_back(ControllerCommands::segno);
+		// repeat from here
+		this->command_list.push_back(ControllerCommands::segno);
 
-	// receive at dp2
-	this->command_list.push_back(ControllerCommands::dp_receive);
-	this->command_list.push_back(ControllerCommands::delay);
+		// receive at dp2
+		this->command_list.push_back(ControllerCommands::dp_receive);
+		this->command_list.push_back(ControllerCommands::set_delay_500ms);
+		this->command_list.push_back(ControllerCommands::delay);
+		this->command_list.push_back(ControllerCommands::set_delay_500ms);
+		this->command_list.push_back(ControllerCommands::delay);
 
-	// throw at tz3
-	this->command_list.push_back(ControllerCommands::dp2_to_tz3);
-	this->command_list.push_back(ControllerCommands::set_tz3);
-	this->command_list.push_back(ControllerCommands::tz_throw);
-	this->command_list.push_back(ControllerCommands::disarm);
+		// throw at tz2
+		this->command_list.push_back(ControllerCommands::dp2_to_tz2);
+		this->command_list.push_back(ControllerCommands::set_tz2);
+		this->command_list.push_back(ControllerCommands::tz_throw);
+		this->command_list.push_back(ControllerCommands::disarm);
 
-	this->command_list.push_back(ControllerCommands::tz3_to_dp2);
+		this->command_list.push_back(ControllerCommands::tz2_to_dp2);
 
-	// repeat forever
-	this->command_list.push_back(ControllerCommands::dal_segno);
-#endif
-
-	//this->command_list.push_back(ControllerCommands::shutdown);
-
-	//this->command_list.push_back(ControllerCommands::dp_receive);
-	//this->command_list.push_back(ControllerCommands::delay);
-
-	// throw at tz1
-	//this->command_list.push_back(ControllerCommands::dp1_to_tz1);
-	//this->command_list.push_back(ControllerCommands::set_tz1);
-	//this->command_list.push_back(ControllerCommands::tz_throw);
-	//this->command_list.push_back(ControllerCommands::delay);
-	//this->command_list.push_back(ControllerCommands::disarm);
+		// repeat forever
+		this->command_list.push_back(ControllerCommands::dal_segno);
+	}
+	else
+	{
+		ROS_ERROR("op mode is invalid");
+	}
 
 	// timer starts immediately
-	control_timer = nh_.createTimer(ros::Duration(0.1), &TrMain::control_timer_callback, this);
+	control_timer = nh_.createTimer(ros::Duration(0.05), &TrMain::control_timer_callback, this);
 }
 
 void TrMain::baseStatusCallback(const std_msgs::UInt16::ConstPtr& msg)
@@ -391,8 +433,19 @@ void TrMain::launcherStatusCallback(const std_msgs::UInt16::ConstPtr& msg)
 		this->_shuttle_received = false;
 		break;
 
-	case LauncherStatus::armed:
+	case LauncherStatus::received:
+		// you can't get this
+
 		this->_shuttle_received = true;
+		break;
+
+	case LauncherStatus::arming:
+		this->_shuttle_received = true;
+		this->_armed = false;
+		break;
+
+	case LauncherStatus::armed:
+		this->_armed = true;
 		break;
 
 	case LauncherStatus::launch_cplt:
@@ -483,8 +536,11 @@ void TrMain::restart(void)
 	base_cmd_msg.data = (uint16_t)BaseCommands::reset_cmd;
 	base_cmd_pub.publish(base_cmd_msg);
 
-	base_cmd_msg.data = (uint16_t)BaseCommands::operational_cmd;
-	base_cmd_pub.publish(base_cmd_msg);
+	if(this->_op_mode == OpMode::full_op || this->_op_mode == OpMode::tz2_test)
+	{
+		base_cmd_msg.data = (uint16_t)BaseCommands::operational_cmd;
+		base_cmd_pub.publish(base_cmd_msg);
+	}
 
 	//this->disarm();
 
@@ -516,9 +572,6 @@ void TrMain::publish_path(nav_msgs::Path path)
 	this->set_pose(path.poses.at(0).pose);
 
 	this->target_pub.publish(path);
-
-	this->_goal_reached = false;
-	this->_is_moving = true;
 }
 
 void TrMain::publish_path(geometry_msgs::Pose from, geometry_msgs::Pose to)
@@ -540,9 +593,6 @@ void TrMain::publish_path(geometry_msgs::Pose from, geometry_msgs::Pose to)
 	path_msg.poses.push_back(_pose);
 
 	this->publish_path(path_msg);
-
-	this->_goal_reached = false;
-	this->_is_moving = true;
 }
 
 void TrMain::publish_path(geometry_msgs::Pose from, geometry_msgs::Pose via, geometry_msgs::Pose to)
@@ -567,9 +617,6 @@ void TrMain::publish_path(geometry_msgs::Pose from, geometry_msgs::Pose via, geo
 	path_msg.poses.push_back(_pose);
 
 	this->publish_path(path_msg);
-
-	this->_goal_reached = false;
-	this->_is_moving = true;
 }
 
 void TrMain::control_timer_callback(const ros::TimerEvent& event)
@@ -666,7 +713,7 @@ void TrMain::control_timer_callback(const ros::TimerEvent& event)
 		}
 		else
 		{
-			this->publish_path(Coordinates::GetInstance()->get_tr_sz(), Coordinates::GetInstance()->get_tr_wp2(), Coordinates::GetInstance()->get_tr_dp2());
+			this->publish_path(Coordinates::GetInstance()->get_tr_sz(), Coordinates::GetInstance()->get_tr_wp2_2(), Coordinates::GetInstance()->get_tr_dp2());
 
 			this->_goal_reached = false;
 			this->_is_moving = true;
@@ -706,7 +753,29 @@ void TrMain::control_timer_callback(const ros::TimerEvent& event)
 		}
 		else
 		{
-			this->publish_path(Coordinates::GetInstance()->get_tr_dp1(), Coordinates::GetInstance()->get_tr_wp2(), Coordinates::GetInstance()->get_tr_tz2());
+			nav_msgs::Path path_msg;
+			path_msg.poses.clear();
+
+			geometry_msgs::PoseStamped _pose;
+
+			path_msg.header.frame_id = "map";
+			path_msg.header.stamp = ros::Time::now();
+
+			_pose.header.frame_id = "map";
+			_pose.header.stamp = ros::Time::now();
+			_pose.pose = Coordinates::GetInstance()->get_tr_dp1();
+			path_msg.poses.push_back(_pose);
+
+			_pose.pose = Coordinates::GetInstance()->get_tr_wp2_1();
+			path_msg.poses.push_back(_pose);
+
+			_pose.pose = Coordinates::GetInstance()->get_tr_wp2_2();
+			path_msg.poses.push_back(_pose);
+
+			_pose.pose = Coordinates::GetInstance()->get_tr_tz2();
+			path_msg.poses.push_back(_pose);
+
+			this->publish_path(path_msg);
 
 			this->_goal_reached = false;
 			this->_is_moving = true;
@@ -854,10 +923,13 @@ void TrMain::control_timer_callback(const ros::TimerEvent& event)
 		}
 		else
 		{
-			this->launch();
-			this->_is_throwing = true;
+			if(this->_armed)
+			{
+				this->launch();
+				this->_is_throwing = true;
 
-			ROS_INFO("launching.");
+				ROS_INFO("launching.");
+			}
 		}
 	}
 	else if(currentCommand == ControllerCommands::set_tz1)
@@ -873,6 +945,21 @@ void TrMain::control_timer_callback(const ros::TimerEvent& event)
 	else if(currentCommand == ControllerCommands::set_tz3)
 	{
 		this->set_thres(this->launcher_thresholds[2]);
+		this->currentCommandIndex++;
+	}
+	else if(currentCommand == ControllerCommands::set_delay_250ms)
+	{
+		set_delay(0.250);
+		this->currentCommandIndex++;
+	}
+	else if(currentCommand == ControllerCommands::set_delay_500ms)
+	{
+		set_delay(0.500);
+		this->currentCommandIndex++;
+	}
+	else if(currentCommand == ControllerCommands::set_delay_1s)
+	{
+		set_delay(1.000);
 		this->currentCommandIndex++;
 	}
 	else if(currentCommand == ControllerCommands::delay)

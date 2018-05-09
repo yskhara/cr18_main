@@ -62,31 +62,36 @@ enum class CarrierStatus : uint16_t
 	shutdown			= 0x0000,
 	reset				= 0x0001,
 
-	/*
-	operational			= 0x0002,
+	sensing				= 0x0020,
 
-	chuck0_chucked		= 0x0010,
-	chuck1_chucked		= 0x0020,
-	chuck2_chucked		= 0x0040,
-	chuck3_chucked		= 0x0080,
-	 */
+	//all_unchucked		= 0x0010,
+	//_1_chucked		= 0x0011,	// wtf
+	//_2_chucked		= 0x0012,
+	//all_chucked		= 0x0013,
+
+	operational			= 0x0010,
+
+	delivering_1		= 0x0081,
+	delivering_2		= 0x0082,
 };
 
 enum class CarrierCommands : uint16_t
 {
 	shutdown_cmd		= 0x0000,
 	reset_cmd			= 0x0001,
-	/*
-	operational			= 0x0002,
-	 */
 
-	chuck_cmd			= 0x0100,
-	unchuck_cmd			= 0x0200,
+//	chuck_1_cmd			= 0x0011,
+//	chuck_2_cmd			= 0x0012,
+	chuck_all_cmd		= 0x0013,
 
-	chuck0				= 0x0010,
-	chuck1				= 0x0020,
-	chuck2				= 0x0040,
-	chuck3				= 0x0080,
+//	unchuck_1_cmd		= 0x0021,
+//	unchuck_2_cmd		= 0x0022,
+	unchuck_all_cmd		= 0x0023,
+
+	deliver_1_cmd		= 0x0031,
+	deliver_2_cmd		= 0x0032,
+
+	sense_cmd			= 0x0020,
 };
 
 enum class BaseStatus : uint16_t
@@ -170,9 +175,9 @@ private:
 	void amt(void);
 	void unchuck_all(void);
 	void chuck_all(void);
-	void arm_ready(void);
-	void unchuck_2(void);
-	void unchuck_0(void);
+	//void arm_ready(void);
+	void deliver_1(void);
+	void deliver_2(void);
 
 	void set_pose(geometry_msgs::Pose pose);
 	void publish_path(nav_msgs::Path path);
@@ -185,7 +190,7 @@ private:
 	// flags
 	//bool _start_pressed = false;
 	bool _next_pressed = false;
-	bool _repeat_pressed = false;
+	bool _abort_pressed = false;
 	//bool _is_moving = false;
 	//bool _is_throwing = false;
 	//bool _is_receiving = false;
@@ -197,7 +202,7 @@ private:
 	{
 		//_start_pressed = false;
 		_next_pressed = false;
-		_repeat_pressed = false;
+		_abort_pressed = false;
 		//_is_moving = false;
 		//_is_throwing = false;
 		//_is_receiving = false;
@@ -248,14 +253,14 @@ CrMain::CrMain(void)
 	joy_sub = nh_.subscribe<sensor_msgs::Joy>("joy", 10, &CrMain::joyCallback, this);
 	//this->shutdown_sub = nh_.subscribe<std_msgs::Bool>("shutdown", 10, &TrMain::shutdownCallback, this);
 
-	this->hand_cmd_pub = nh_.advertise<std_msgs::UInt16>("hand/cmd", 1);
-	this->base_cmd_pub = nh_.advertise<std_msgs::UInt16>("base/cmd", 1);
+	this->hand_cmd_pub = nh_.advertise<std_msgs::UInt16>("hand/cmd", 10);
+	this->base_cmd_pub = nh_.advertise<std_msgs::UInt16>("base/cmd", 10);
 
 	this->goal_reached_sub = nh_.subscribe<std_msgs::Bool>("goal_reached", 10, &CrMain::goalReachedCallback, this);
-	this->target_pub = nh_.advertise<nav_msgs::Path>("target_path", 1);
-	this->abort_pub = nh_.advertise<std_msgs::Bool>("abort", 1);
+	this->target_pub = nh_.advertise<nav_msgs::Path>("target_path", 10);
+	this->abort_pub = nh_.advertise<std_msgs::Bool>("abort", 10);
 
-	this->initialpose_pub = nh_.advertise<geometry_msgs::PoseWithCovarianceStamped>("/initialpose", 1);
+	this->initialpose_pub = nh_.advertise<geometry_msgs::PoseWithCovarianceStamped>("/initialpose", 10);
 
 	auto private_nh = ros::NodeHandle("~");
 	private_nh.param("amt_coeff", this->_amt_coeff, 0.25);
@@ -344,6 +349,7 @@ CrMain::CrMain(void)
 	// deliver at dp2 for tz3
 	this->command_list.push_back(CRControllerCommands::pp2_to_dp2);
 	this->command_list.push_back(CRControllerCommands::dp1_deliver);
+	this->command_list.push_back(CRControllerCommands::pp_pickup);
 	this->command_list.push_back(CRControllerCommands::shutdown);
 #endif
 
@@ -447,7 +453,7 @@ void CrMain::joyCallback(const sensor_msgs::Joy::ConstPtr& joy)
 	}
 	else if(_b && !last_b)
 	{
-		this->_repeat_pressed = true;
+		this->_abort_pressed = true;
 	}
 	else if(_x && !last_x)
 	{
@@ -699,17 +705,15 @@ void CrMain::control_timer_callback(const ros::TimerEvent& event)
 		{
 			if(this->_next_pressed)
 			{
-				//chuck_all();
-
-				// maybe it's a bad idea...
-				//clear_flags();
+				clear_flags();
+				this->_next_pressed = true;
 				this->_status = CRControllerStatus::pp_pickingup;
 
 				this->currentCommandIndex++;
-				ROS_INFO("goal reached : pp1 (user input)");
+				ROS_INFO("goal reached : pp1 (operator input)");
 				//ROS_INFO("picked up shuttles.");
 			}
-			else if(this->_goal_reached)
+			else if(this->_abort_pressed || this->_goal_reached)
 			{
 				//chuck_all();
 
@@ -734,7 +738,7 @@ void CrMain::control_timer_callback(const ros::TimerEvent& event)
 	{
 		if(this->_status == CRControllerStatus::moving)
 		{
-			if(this->_goal_reached)
+			if(this->_abort_pressed || this->_goal_reached)
 			{
 				clear_flags();
 				this->_status = CRControllerStatus::motion_cplt;
@@ -780,7 +784,7 @@ void CrMain::control_timer_callback(const ros::TimerEvent& event)
 	{
 		if(this->_status == CRControllerStatus::moving)
 		{
-			if(this->_goal_reached)
+			if(this->_abort_pressed || this->_goal_reached)
 			{
 				clear_flags();
 				this->_status = CRControllerStatus::motion_cplt;
@@ -835,10 +839,10 @@ void CrMain::control_timer_callback(const ros::TimerEvent& event)
 				this->_status = CRControllerStatus::pp_pickingup;
 
 				this->currentCommandIndex++;
-				ROS_INFO("goal reached : pp2");
+				ROS_INFO("goal reached : pp2 (operator input)");
 				//ROS_INFO("picked up shuttles.");
 			}
-			else if(this->_goal_reached)
+			else if(this->_abort_pressed || this->_goal_reached)
 			{
 				clear_flags();
 				this->_status = CRControllerStatus::motion_cplt;
@@ -915,7 +919,7 @@ void CrMain::control_timer_callback(const ros::TimerEvent& event)
 	{
 		if(this->_status == CRControllerStatus::pp_pickingup)
 		{
-			if(this->_next_pressed || this->_repeat_pressed)
+			if(this->_next_pressed)
 			{
 				this->chuck_all();
 
@@ -923,7 +927,7 @@ void CrMain::control_timer_callback(const ros::TimerEvent& event)
 				this->_status = CRControllerStatus::motion_cplt;
 
 				this->currentCommandIndex++;
-				ROS_INFO("picked up shuttles");
+				ROS_INFO("picked up shuttles.");
 			}
 		}
 		else
@@ -941,10 +945,9 @@ void CrMain::control_timer_callback(const ros::TimerEvent& event)
 		{
 			if(this->_next_pressed)
 			{
-				this->unchuck_0();
+				this->deliver_1();
 
 				geometry_msgs::Pose _dp1_tz1;
-				geometry_msgs::Pose _tmp_wp;
 				geometry_msgs::Pose _dp1_tz2;
 				tf::StampedTransform base_link;
 
@@ -962,15 +965,11 @@ void CrMain::control_timer_callback(const ros::TimerEvent& event)
 				_dp1_tz1.position.y = base_link.getOrigin().y();
 				_dp1_tz1.orientation = tf::createQuaternionMsgFromYaw(0.0);
 
-				_tmp_wp.position.x = _dp1_tz1.position.x - 0.500;
-				_tmp_wp.position.y = _dp1_tz1.position.y;
-				_tmp_wp.orientation = _dp1_tz1.orientation;
-
-				_dp1_tz2.position.x = _dp1_tz1.position.x - 0.200;
-				_dp1_tz2.position.y = _dp1_tz1.position.y - 0.300;
+				_dp1_tz2.position.x = _dp1_tz1.position.x;
+				_dp1_tz2.position.y = _dp1_tz1.position.y - 0.300 - 0.025;	// tolerance?
 				_dp1_tz2.orientation = _dp1_tz1.orientation;
 
-				this->publish_path(_dp1_tz1, _tmp_wp, _dp1_tz2);
+				this->publish_path(_dp1_tz1, _dp1_tz2);
 
 				clear_flags();
 				this->_status = CRControllerStatus::moving;
@@ -997,7 +996,7 @@ void CrMain::control_timer_callback(const ros::TimerEvent& event)
 		{
 			if(this->_next_pressed)
 			{
-				this->unchuck_2();
+				this->deliver_2();
 
 				clear_flags();
 				this->_status = CRControllerStatus::motion_cplt;
@@ -1086,38 +1085,28 @@ void CrMain::amt(void)
 void CrMain::unchuck_all(void)
 {
 	// unchuck all
-	hand_cmd_msg.data = (uint16_t)CarrierCommands::unchuck_cmd
-			| (uint16_t)CarrierCommands::chuck0
-			| (uint16_t)CarrierCommands::chuck1
-			| (uint16_t)CarrierCommands::chuck2
-			| (uint16_t)CarrierCommands::chuck3;
+	hand_cmd_msg.data = (uint16_t)CarrierCommands::unchuck_all_cmd;
 	hand_cmd_pub.publish(hand_cmd_msg);
 }
 
 void CrMain::chuck_all(void)
 {
 	// chuck all
-	hand_cmd_msg.data = (uint16_t)CarrierCommands::chuck_cmd
-			| (uint16_t)CarrierCommands::chuck0
-			| (uint16_t)CarrierCommands::chuck1
-			| (uint16_t)CarrierCommands::chuck2
-			| (uint16_t)CarrierCommands::chuck3;
+	hand_cmd_msg.data = (uint16_t)CarrierCommands::chuck_all_cmd;
 	hand_cmd_pub.publish(hand_cmd_msg);
 }
 
-void CrMain::unchuck_0(void)
+void CrMain::deliver_1(void)
 {
-	// unchuck 0
-	hand_cmd_msg.data = (uint16_t)CarrierCommands::unchuck_cmd
-			| (uint16_t)CarrierCommands::chuck0 ;
+	// deliver 1
+	hand_cmd_msg.data = (uint16_t)CarrierCommands::deliver_1_cmd;
 	hand_cmd_pub.publish(hand_cmd_msg);
 }
 
-void CrMain::unchuck_2(void)
+void CrMain::deliver_2(void)
 {
-	// unchuck 2
-	hand_cmd_msg.data = (uint16_t)CarrierCommands::unchuck_cmd
-			| (uint16_t)CarrierCommands::chuck2 ;
+	// deliver 2
+	hand_cmd_msg.data = (uint16_t)CarrierCommands::deliver_2_cmd;
 	hand_cmd_pub.publish(hand_cmd_msg);
 }
 
