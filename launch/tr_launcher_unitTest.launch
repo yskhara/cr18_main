@@ -4,11 +4,31 @@
     <include file="$(find navigation)/launch/navigation.launch">
         <arg name="use_amcl" value="false" />
     </include>
-    
+    <!-- 
     <node pkg="nhk2018_main_ros" type="tr_launcher_unitTest" name="main" output="screen">
         <rosparam param="unchuck_thres">[450, 400, 144]</rosparam>
     </node>
+    -->
     <!-- 2000 for tz1 -->
+    
+    <node pkg="nhk2018_main_ros" type="tr_main_auto_2v0" name="main" output="screen">
+        <!--
+        <rosparam param="unchuck_thres">[540, 540, 200]</rosparam>
+        -->
+        <rosparam param="unchuck_thres">[280, 280, 240]</rosparam>
+        <param name="op_mode" value="unittest" />
+    </node>
+    <!-- 540 くらいが実用的な限界です -->
+    <!-- 
+        20180405 : TZ1はR3, TZ2にはR2を使用した. 
+        TZ1: 300
+        TZ2: 300
+        TZ3: 255 
+    -->
+    <!-- 
+        20180408 : 
+        [280, 280, 235]
+     -->
     
     <!-- shutdown controller -->
     <!-- node pkg="base_controller" type="shutdown_controller" name="shutdown_ctrl" /-->

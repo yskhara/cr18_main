@@ -7,6 +7,7 @@
        <param name="invert_x" value="false" />
        <param name="invert_y" value="true" />
        <param name="invert_z" value="false" />
+       <remap from="motor_cmd_vel" to="base/motor_cmd_vel" />
     </node>
     
     <!-- tr_main -->
@@ -25,16 +26,11 @@
     <!-- shutdown controller -->
     <node pkg="base_controller" type="shutdown_controller_joy" name="shutdown_ctrl" />
     
-    <!-- base itself -->
-    <node pkg="rosserial_server" type="serial_node" name="base">
-<rosparam>
-port: /dev/ttyUSB0
-baud: 57600
-require:
-  publishers: [  ]
-  subscribers: [ motor_cmd_vel, shutdown ]
-</rosparam>
-    </node>
+    
+    <node pkg="nhk2018_main_ros" type="cr_can" name="cr_can" />
+    
+    <!-- usb_can -->
+    <node pkg="nhk2018_main_ros" type="usb_can_node" name="usb_can_node"/>
     
     <!-- hand itself -->
     <node pkg="rosserial_server" type="serial_node" name="hands">
