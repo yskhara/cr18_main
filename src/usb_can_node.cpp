@@ -10,6 +10,9 @@
 #include <string>
 #include <thread>
 #include <mutex>
+#include <array>
+
+#include <cstring>
 
 #include <boost/asio.hpp>
 #include <boost/thread.hpp>
@@ -59,6 +62,12 @@ private:
 	// return false on success
 	bool waitForStatus(void);
 
+	void send(const uint8_t * const str);
+	inline void send(const char * const str)
+	{
+		send((const uint8_t * const)str);
+	}
+
 	void onReceive(const boost::system::error_code& error);
 	void receive(void);
 
@@ -68,10 +77,12 @@ private:
 
 	boost::asio::serial_port *_port;
 	boost::asio::io_service *_io;
-	boost::asio::io_service::work *w;
+	boost::asio::io_service::work *_w;
 
-	boost::thread *_service_thread;
+	boost::asio::strand *_read_strand;
+	boost::asio::strand *_write_strand;
 
+	boost::thread_group _service_threads;
 
 	boost::asio::streambuf _receive_buffer;
 
@@ -96,6 +107,8 @@ private:
 	std::mutex _mtx;
 
 	//std::thread *can_rx_thread;
+
+	static constexpr int CAN_MTU = 32;
 };
 
 
@@ -126,10 +139,14 @@ UsbCanNode::UsbCanNode(void)
 	this->_io = new io_service();
 	this->_port = new serial_port(*_io);
 
-	w = new boost::asio::io_service::work(*_io);
+	this->_w = new boost::asio::io_service::work(*_io);
 
-	_service_thread = new boost::thread(boost::bind(static_cast<std::size_t (boost::asio::io_service::*)()>(&boost::asio::io_service::run), this->_io));
+	this->_read_strand = new boost::asio::strand(*_io);
+	this->_write_strand = new boost::asio::strand(*_io);
 
+	// 2 threads for read/write
+	this->_service_threads.create_thread(boost::bind((std::size_t (boost::asio::io_service::*)())&boost::asio::io_service::run, _io));
+	this->_service_threads.create_thread(boost::bind((std::size_t (boost::asio::io_service::*)())&boost::asio::io_service::run, _io));
 
 	this->can_tx_sub = _nh.subscribe<can_msgs::CanFrame>("/can_tx", 10, &UsbCanNode::canTxCallback, this);
 	this->can_rx_pub = _nh.advertise<can_msgs::CanFrame>("/can_rx", 1);
@@ -161,7 +178,8 @@ bool UsbCanNode::Initialize(void)
 	}
 
 	// flush and close current connection
-	_port->write_some(buffer("\r", 1));
+	//_port->write_some(buffer("\r", 1));
+	this->send("\r");
 
 	this->waitForStatus();
 	if(this->_status)
@@ -172,7 +190,8 @@ bool UsbCanNode::Initialize(void)
 
 	ROS_INFO("closing last session");
 
-	_port->write_some(buffer("C\r", 2));
+	//_port->write_some(buffer("C\r", 2));
+	this->send("C\r");
 
 	this->waitForStatus();
 	if(this->_status)
@@ -251,7 +270,8 @@ bool UsbCanNode::Start(void)
 		return true;
 	}
 
-	_port->write_some(buffer("O\r", 2));
+	//_port->write_some(buffer("O\r", 2));
+	this->send("O\r");
 
 	this->waitForStatus();
 	if(this->_status)
@@ -272,7 +292,8 @@ bool UsbCanNode::Stop(void)
 		return true;
 	}
 
-	_port->write_some(buffer("C\r", 2));
+	//_port->write_some(buffer("C\r", 2));
+	this->send("C\r");
 	this->_is_open = false;
 
 	this->waitForStatus();
@@ -294,39 +315,48 @@ bool UsbCanNode::SetBaudRate(const int baud)
 
 	if(baud == 10000)
 	{
-		_port->write_some(buffer("S0\r", 3));
+		//_port->write_some(buffer("S0\r", 3));
+		this->send((const uint8_t * const)"S0\r");
 	}
 	else if(baud == 20000)
 	{
-		_port->write_some(buffer("S1\r", 3));
+		//_port->write_some(buffer("S1\r", 3));
+		this->send((const uint8_t * const)"S1\r");
 	}
 	else if(baud == 50000)
 	{
-		_port->write_some(buffer("S2\r", 3));
+		//_port->write_some(buffer("S2\r", 3));
+		this->send((const uint8_t * const)"S2\r");
 	}
 	else if(baud == 100000)
 	{
-		_port->write_some(buffer("S3\r", 3));
+		//_port->write_some(buffer("S3\r", 3));
+		this->send((const uint8_t * const)"S3\r");
 	}
 	else if(baud == 125000)
 	{
-		_port->write_some(buffer("S4\r", 3));
+		//_port->write_some(buffer("S4\r", 3));
+		this->send((const uint8_t * const)"S4\r");
 	}
 	else if(baud == 250000)
 	{
-		_port->write_some(buffer("S5\r", 3));
+		//_port->write_some(buffer("S5\r", 3));
+		this->send((const uint8_t * const)"S5\r");
 	}
 	else if(baud == 500000)
 	{
-		_port->write_some(buffer("S6\r", 3));
+		//_port->write_some(buffer("S6\r", 3));
+		this->send((const uint8_t * const)"S6\r");
 	}
 	else if(baud == 800000)
 	{
-		_port->write_some(buffer("S7\r", 3));
+		//_port->write_some(buffer("S7\r", 3));
+		this->send((const uint8_t * const)"S7\r");
 	}
 	else if(baud == 1000000)
 	{
-		_port->write_some(buffer("S8\r", 3));
+		//_port->write_some(buffer("S8\r", 3));
+		this->send((const uint8_t * const)"S8\r");
 	}
 	else
 	{
@@ -500,7 +530,25 @@ void UsbCanNode::canTxCallback(const can_msgs::CanFrame::ConstPtr &msg)
 	// add carriage return (slcan EOL)
 	str_buf[i++] = '\r';
 
-	this->_port->write_some(buffer(str_buf, i));
+	//this->_port->write_some(buffer(str_buf, i));
+	this->send(str_buf);
+}
+
+void UsbCanNode::send(const uint8_t * const str)
+{
+	static std::mutex m;
+	std::lock_guard<std::mutex> _lock(m);
+
+	//std::array<char, CAN_MTU> send_buf;
+
+	try
+	{
+		this->_port->write_some(buffer(str, strlen((const char * const)str)));
+	}
+	catch(std::exception &ex)
+	{
+		ROS_WARN("an error occurred: %s", ex.what());
+	}
 }
 
 void UsbCanNode::receive(void)
