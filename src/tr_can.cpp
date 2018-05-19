@@ -8,6 +8,7 @@
 
 #include <ros/ros.h>
 #include <std_msgs/UInt16.h>
+#include <std_msgs/UInt8.h>
 #include <std_msgs/Float64.h>
 #include <std_msgs/Int16MultiArray.h>
 
@@ -83,6 +84,7 @@ private:
 	ros::Publisher  _base_odom_x_pub;
 	ros::Publisher  _base_odom_y_pub;
 	ros::Publisher  _base_odom_yaw_pub;
+	ros::Publisher  _base_conf_pub;
 
 	static constexpr uint16_t id_baseStatus       = 0x200;
 	static constexpr uint16_t id_baseCmd          = 0x201;
@@ -92,6 +94,7 @@ private:
 	static constexpr uint16_t id_baseOdomX        = 0x205;
 	static constexpr uint16_t id_baseOdomY        = 0x206;
 	static constexpr uint16_t id_baseOdomYaw      = 0x207;
+	static constexpr uint16_t id_baseConf         = 0x208;
 
 	static constexpr uint16_t id_launcherStatus	= 0x300;
 	static constexpr uint16_t id_launcherCmd	= 0x301;
@@ -111,6 +114,7 @@ TrCanNode::TrCanNode(void)
 	_base_odom_x_pub		= _nh.advertise<std_msgs::Float64>("base/odom/x", 10);
 	_base_odom_y_pub		= _nh.advertise<std_msgs::Float64>("base/odom/y", 10);
 	_base_odom_yaw_pub		= _nh.advertise<std_msgs::Float64>("base/odom/yaw", 10);
+	_base_conf_pub			= _nh.advertise<std_msgs::UInt8>("base/conf", 10);
 }
 
 
@@ -138,6 +142,8 @@ void TrCanNode::canRxCallback(const can_msgs::CanFrame::ConstPtr &msg)
 	std_msgs::Float64 _base_odom_x_msg;
 	std_msgs::Float64 _base_odom_y_msg;
 	std_msgs::Float64 _base_odom_yaw_msg;
+	std_msgs::UInt8 _base_conf_msg;
+
 	switch(msg->id)
 	{
 	case id_launcherStatus:
@@ -163,6 +169,11 @@ void TrCanNode::canRxCallback(const can_msgs::CanFrame::ConstPtr &msg)
 	case id_baseOdomYaw:
 		can_unpack(msg->data, _base_odom_yaw_msg.data);
 		_base_odom_yaw_pub.publish(_base_odom_yaw_msg);
+		break;
+
+	case id_baseConf:
+		can_unpack(msg->data, _base_conf_msg.data);
+		_base_conf_pub.publish(_base_conf_msg);
 		break;
 
 	default:
