@@ -543,7 +543,7 @@ void TrMain::launcherStatusCallback(const std_msgs::UInt16::ConstPtr& msg)
 
 void TrMain::baseConfCallback(const std_msgs::UInt8::ConstPtr& msg)
 {
-	if(this->currentCommandIndex != -1)
+	if(this->currentCommandIndex != -1 && this->currentCommandIndex != 0)
 	{
 		return;
 	}
