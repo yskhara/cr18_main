@@ -174,7 +174,7 @@ Coordinates::Coordinates(void)
 
 	// DP1 -> TZ2
 	this->_tr_wp2_1.position.x = 1.000;
-	this->_tr_wp2_1.position.y = 2.000;
+	this->_tr_wp2_1.position.y = 2.500;
 	this->_tr_wp2_1.position.z = 0.000;
 	this->_tr_wp2_1.orientation = tf::createQuaternionMsgFromYaw(M_PI/2);
 
