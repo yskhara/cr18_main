@@ -64,6 +64,7 @@ public:
 	{
 		return this->_tr_wp2_2;
 	}
+	/*
 	inline geometry_msgs::Pose get_tr_dp1(void) const
 	{
 		return this->_tr_dp1;
@@ -72,6 +73,7 @@ public:
 	{
 		return this->_tr_dp2;
 	}
+	*/
 	inline geometry_msgs::Pose get_tr_tz1(void) const
 	{
 		return this->_tr_tz1;
@@ -153,8 +155,9 @@ Coordinates::Coordinates(void)
 	this->_tr_sz.position.x = 0.600;
 	this->_tr_sz.position.y = 7.450;
 	this->_tr_sz.position.z = 0.000;
-	this->_tr_sz.orientation = tf::createQuaternionMsgFromYaw(-M_PI/4);
+	this->_tr_sz.orientation = tf::createQuaternionMsgFromYaw(M_PI/4);
 
+	// SZ -> TZ1
 	this->_tr_wp1.position.x = 1.500;
 	this->_tr_wp1.position.y = 2.750;
 	this->_tr_wp1.position.z = 0.000;
