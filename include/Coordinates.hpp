@@ -158,8 +158,8 @@ Coordinates::Coordinates(void)
 	this->_tr_sz.orientation = tf::createQuaternionMsgFromYaw(M_PI/4);
 
 	// SZ -> TZ1
-	this->_tr_wp1.position.x = 1.500;
-	this->_tr_wp1.position.y = 2.750;
+	this->_tr_wp1.position.x = 1.000;
+	this->_tr_wp1.position.y = 3.250;
 	this->_tr_wp1.position.z = 0.000;
 	this->_tr_wp1.orientation = tf::createQuaternionMsgFromYaw(M_PI * 105 / 256);
 
