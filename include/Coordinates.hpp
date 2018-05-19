@@ -186,16 +186,16 @@ Coordinates::Coordinates(void)
 	//this->_tr_dp2.position.x = 1.065;
 	//this->_tr_dp2.position.y = 0.985;
 	//this->_tr_dp2.orientation = tf::createQuaternionMsgFromYaw(-M_PI/2);
-	this->_tr_dp2.position.x = 2.250;
-	this->_tr_dp2.position.y = 0.900;
+	this->_tr_dp2.position.x = 2.680;
+	this->_tr_dp2.position.y = 1.200;
 	this->_tr_dp2.position.z = 0.000;
 	this->_tr_dp2.orientation = tf::createQuaternionMsgFromYaw(0.0);
 
 	//this->_tr_tz1.position.x = 3.775;
 	//this->_tr_tz1.position.y = 2.985;
 	//this->_tr_tz1.orientation = tf::createQuaternionMsgFromYaw(M_PI/2);
-	this->_tr_tz1.position.x = 2.8;
-	this->_tr_tz1.position.y = 2.985;
+	this->_tr_tz1.position.x = 2.700;
+	this->_tr_tz1.position.y = 3.100;
 	this->_tr_tz1.position.z = 0.000;
 	this->_tr_tz1.orientation = tf::createQuaternionMsgFromYaw(M_PI * 105 / 256);
 
