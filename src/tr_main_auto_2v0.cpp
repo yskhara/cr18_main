@@ -826,6 +826,8 @@ void TrMain::control_timer_callback(const ros::TimerEvent& event)
 
 			this->_goal_reached = false;
 			this->_is_moving = true;
+
+			ROS_INFO("moving : sz -> tz1");
 		}
 	}
 	else if(currentCommand == ControllerCommands::sz_to_tz2)
