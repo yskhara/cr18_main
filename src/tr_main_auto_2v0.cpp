@@ -301,11 +301,8 @@ const std::vector<ControllerCommands> TrMain::tz2_op_commands
 		ControllerCommands::delay,
 		ControllerCommands::set_delay_500ms,
 		ControllerCommands::delay,
-		ControllerCommands::set_delay_500ms,
-		ControllerCommands::delay,
 
 		// throw at tz2
-		ControllerCommands::tz1_to_tz2,
 		ControllerCommands::set_tz2,
 		ControllerCommands::tz_throw,
 		ControllerCommands::disarm,
