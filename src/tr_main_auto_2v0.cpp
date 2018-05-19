@@ -559,22 +559,27 @@ void TrMain::baseConfCallback(const std_msgs::UInt8::ConstPtr& msg)
 		}
 		else if(this->_op_mode == OpMode::tz2_op)
 		{
+			this->command_list = &TrMain::tz2_op_commands;
 			ROS_INFO("operation mode set to tz2_op.");
 		}
 		else if(this->_op_mode == OpMode::tz3_op)
 		{
+			this->command_list = &TrMain::tz3_op_commands;
 			ROS_INFO("operation mode set to tz3_op.");
 		}
 		else if(this->_op_mode == OpMode::tz1_ut)
 		{
+			this->command_list = &TrMain::tz1_ut_commands;
 			ROS_INFO("operation mode set to tz1_ut.");
 		}
 		else if(this->_op_mode == OpMode::tz2_ut)
 		{
+			this->command_list = &TrMain::tz2_ut_commands;
 			ROS_INFO("operation mode set to tz2_ut.");
 		}
 		else if(this->_op_mode == OpMode::tz3_ut)
 		{
+			this->command_list = &TrMain::tz3_ut_commands;
 			ROS_INFO("operation mode set to tz3_ut.");
 		}
 	}
