@@ -241,10 +241,10 @@ const std::vector<ControllerCommands> TrMain::tz1_op_commands
 		// receive at tz1
 		ControllerCommands::sz_to_tz1,
 		ControllerCommands::dp_receive,
-		ControllerCommands::set_delay_500ms,
-		ControllerCommands::delay,
-		ControllerCommands::set_delay_500ms,
-		ControllerCommands::delay,
+		//ControllerCommands::set_delay_500ms,
+		//ControllerCommands::delay,
+		//ControllerCommands::set_delay_500ms,
+		//ControllerCommands::delay,
 
 		// throw at tz1
 		ControllerCommands::set_tz1,
@@ -524,6 +524,11 @@ void TrMain::launcherStatusCallback(const std_msgs::UInt16::ConstPtr& msg)
 
 	case LauncherStatus::armed:
 		this->_armed = true;
+		break;
+
+	case LauncherStatus::launching:
+		this->_armed = false;
+		this->_launch_completed = false;
 		break;
 
 	case LauncherStatus::launch_cplt:
@@ -982,18 +987,27 @@ void TrMain::control_timer_callback(const ros::TimerEvent& event)
 	}
 	else if(currentCommand == ControllerCommands::set_tz1)
 	{
-		this->set_thres(this->launcher_thresholds[0]);
-		this->currentCommandIndex++;
+		if(this->_armed)
+		{
+			this->set_thres(this->launcher_thresholds[0]);
+			this->currentCommandIndex++;
+		}
 	}
 	else if(currentCommand == ControllerCommands::set_tz2)
 	{
-		this->set_thres(this->launcher_thresholds[1]);
-		this->currentCommandIndex++;
+		if(this->_armed)
+		{
+			this->set_thres(this->launcher_thresholds[1]);
+			this->currentCommandIndex++;
+		}
 	}
 	else if(currentCommand == ControllerCommands::set_tz3)
 	{
-		this->set_thres(this->launcher_thresholds[2]);
-		this->currentCommandIndex++;
+		if(this->_armed)
+		{
+			this->set_thres(this->launcher_thresholds[2]);
+			this->currentCommandIndex++;
+		}
 	}
 	else if(currentCommand == ControllerCommands::set_delay_250ms)
 	{
