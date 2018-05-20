@@ -193,13 +193,13 @@ Coordinates::Coordinates(void)
 	this->_tr_wp2_2.position.z = 0.000;
 	this->_tr_wp2_2.orientation = tf::createQuaternionMsgFromYaw(M_PI/2);
 
-	this->_tr_wp3_1.position.x = 5.500;
+	this->_tr_wp3_1.position.x = 6.000;
 	this->_tr_wp3_1.position.y = 1.000;
 	this->_tr_wp3_1.position.z = 0.000;
 	this->_tr_wp3_1.orientation = tf::createQuaternionMsgFromYaw(M_PI/2);
 
-	this->_tr_wp3_2.position.x = 4.500;
-	this->_tr_wp3_2.position.y = 1.000;
+	this->_tr_wp3_2.position.x = 3.750;
+	this->_tr_wp3_2.position.y = 1.100;
 	this->_tr_wp3_2.position.z = 0.000;
 	this->_tr_wp3_2.orientation = tf::createQuaternionMsgFromYaw(M_PI * 110 / 256);
 
