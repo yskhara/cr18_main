@@ -18,6 +18,7 @@ private:
 	geometry_msgs::Pose _tr_wp1;
 	geometry_msgs::Pose _tr_wp2_1;
 	geometry_msgs::Pose _tr_wp2_2;
+	geometry_msgs::Pose _tr_wp3;
 	geometry_msgs::Pose _tr_dp1;
 	geometry_msgs::Pose _tr_dp2;
 	geometry_msgs::Pose _tr_tz1;
@@ -64,16 +65,20 @@ public:
 	{
 		return this->_tr_wp2_2;
 	}
+	inline geometry_msgs::Pose get_tr_wp3(void) const
+	{
+		return this->_tr_wp3;
+	}
 	/*
 	inline geometry_msgs::Pose get_tr_dp1(void) const
 	{
 		return this->_tr_dp1;
 	}
+	*/
 	inline geometry_msgs::Pose get_tr_dp2(void) const
 	{
 		return this->_tr_dp2;
 	}
-	*/
 	inline geometry_msgs::Pose get_tr_tz1(void) const
 	{
 		return this->_tr_tz1;
@@ -173,7 +178,7 @@ Coordinates::Coordinates(void)
 	this->_tr_dp1.orientation = tf::createQuaternionMsgFromYaw(0.0);
 
 	// DP1 -> TZ2
-	this->_tr_wp2_1.position.x = 1.000;
+	this->_tr_wp2_1.position.x = 1.500;
 	this->_tr_wp2_1.position.y = 2.500;
 	this->_tr_wp2_1.position.z = 0.000;
 	this->_tr_wp2_1.orientation = tf::createQuaternionMsgFromYaw(M_PI/2);
@@ -183,27 +188,33 @@ Coordinates::Coordinates(void)
 	this->_tr_wp2_2.position.z = 0.000;
 	this->_tr_wp2_2.orientation = tf::createQuaternionMsgFromYaw(M_PI/2);
 
+	this->_tr_wp3.position.x = 5.500;
+	this->_tr_wp3.position.y = 1.000;
+	this->_tr_wp3.position.z = 0.000;
+	this->_tr_wp3.orientation = tf::createQuaternionMsgFromYaw(M_PI/2);
+
 	//this->_tr_dp2.position.x = 1.065;
 	//this->_tr_dp2.position.y = 0.985;
 	//this->_tr_dp2.orientation = tf::createQuaternionMsgFromYaw(-M_PI/2);
-	this->_tr_dp2.position.x = 2.680;
-	this->_tr_dp2.position.y = 1.200;
+	this->_tr_dp2.position.x = 2.700;
+	this->_tr_dp2.position.y = 1.300;
 	this->_tr_dp2.position.z = 0.000;
-	this->_tr_dp2.orientation = tf::createQuaternionMsgFromYaw(0.0);
+	this->_tr_dp2.orientation = tf::createQuaternionMsgFromYaw(M_PI * 110 / 256);
 
 	//this->_tr_tz1.position.x = 3.775;
 	//this->_tr_tz1.position.y = 2.985;
 	//this->_tr_tz1.orientation = tf::createQuaternionMsgFromYaw(M_PI/2);
 	this->_tr_tz1.position.x = 2.700;
-	this->_tr_tz1.position.y = 3.100;
+	this->_tr_tz1.position.y = 3.150;
 	this->_tr_tz1.position.z = 0.000;
-	this->_tr_tz1.orientation = tf::createQuaternionMsgFromYaw(M_PI * 105 / 256);
+	//this->_tr_tz1.orientation = tf::createQuaternionMsgFromYaw(M_PI * 105 / 256);
+	this->_tr_tz1.orientation = tf::createQuaternionMsgFromYaw(M_PI * 110 / 256);
 
 	//this->_tr_tz2.position.x = 3.775;
 	//this->_tr_tz2.position.y = 0.985;
 	//this->_tr_tz2.orientation = tf::createQuaternionMsgFromYaw(M_PI/2);
 	this->_tr_tz2.position.x = 2.800;
-	this->_tr_tz2.position.y = 1.400;
+	this->_tr_tz2.position.y = 1.300;
 	this->_tr_tz2.position.z = 0.000;
 	this->_tr_tz2.orientation = tf::createQuaternionMsgFromYaw(M_PI * 57 / 128);
 
