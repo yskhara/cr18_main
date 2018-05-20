@@ -941,7 +941,7 @@ void TrMain::control_timer_callback(const ros::TimerEvent& event)
 		}
 		else
 		{
-			this->publish_path(Coordinates::GetInstance()->get_tr_dp2(), Coordinates::GetInstance()->get_tr_wp3(), Coordinates::GetInstance()->get_tr_tz3());
+			this->publish_path(Coordinates::GetInstance()->get_tr_dp2(), Coordinates::GetInstance()->get_tr_wp3_1(), Coordinates::GetInstance()->get_tr_tz3());
 
 			this->_goal_reached = false;
 			this->_is_moving = true;
@@ -985,7 +985,7 @@ void TrMain::control_timer_callback(const ros::TimerEvent& event)
 		}
 		else
 		{
-			this->publish_path(Coordinates::GetInstance()->get_tr_tz3(), Coordinates::GetInstance()->get_tr_wp3(), Coordinates::GetInstance()->get_tr_dp2());
+			this->publish_path(Coordinates::GetInstance()->get_tr_tz3(), Coordinates::GetInstance()->get_tr_wp3_2(), Coordinates::GetInstance()->get_tr_dp2());
 
 			this->_goal_reached = false;
 			this->_is_moving = true;

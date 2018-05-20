@@ -18,7 +18,8 @@ private:
 	geometry_msgs::Pose _tr_wp1;
 	geometry_msgs::Pose _tr_wp2_1;
 	geometry_msgs::Pose _tr_wp2_2;
-	geometry_msgs::Pose _tr_wp3;
+	geometry_msgs::Pose _tr_wp3_1;
+	geometry_msgs::Pose _tr_wp3_2;
 	geometry_msgs::Pose _tr_dp1;
 	geometry_msgs::Pose _tr_dp2;
 	geometry_msgs::Pose _tr_tz1;
@@ -65,9 +66,13 @@ public:
 	{
 		return this->_tr_wp2_2;
 	}
-	inline geometry_msgs::Pose get_tr_wp3(void) const
+	inline geometry_msgs::Pose get_tr_wp3_1(void) const
 	{
-		return this->_tr_wp3;
+		return this->_tr_wp3_1;
+	}
+	inline geometry_msgs::Pose get_tr_wp3_2(void) const
+	{
+		return this->_tr_wp3_2;
 	}
 	/*
 	inline geometry_msgs::Pose get_tr_dp1(void) const
@@ -163,8 +168,8 @@ Coordinates::Coordinates(void)
 	this->_tr_sz.orientation = tf::createQuaternionMsgFromYaw(M_PI/4);
 
 	// SZ -> TZ1
-	this->_tr_wp1.position.x = 1.000;
-	this->_tr_wp1.position.y = 3.250;
+	this->_tr_wp1.position.x = 1.250;
+	this->_tr_wp1.position.y = 3.500;
 	this->_tr_wp1.position.z = 0.000;
 	this->_tr_wp1.orientation = tf::createQuaternionMsgFromYaw(M_PI * 105 / 256);
 
@@ -184,14 +189,19 @@ Coordinates::Coordinates(void)
 	this->_tr_wp2_1.orientation = tf::createQuaternionMsgFromYaw(M_PI/2);
 
 	this->_tr_wp2_2.position.x = 1.500;
-	this->_tr_wp2_2.position.y = 1.000;
+	this->_tr_wp2_2.position.y = 1.250;
 	this->_tr_wp2_2.position.z = 0.000;
 	this->_tr_wp2_2.orientation = tf::createQuaternionMsgFromYaw(M_PI/2);
 
-	this->_tr_wp3.position.x = 5.500;
-	this->_tr_wp3.position.y = 1.000;
-	this->_tr_wp3.position.z = 0.000;
-	this->_tr_wp3.orientation = tf::createQuaternionMsgFromYaw(M_PI/2);
+	this->_tr_wp3_1.position.x = 5.500;
+	this->_tr_wp3_1.position.y = 1.000;
+	this->_tr_wp3_1.position.z = 0.000;
+	this->_tr_wp3_1.orientation = tf::createQuaternionMsgFromYaw(M_PI/2);
+
+	this->_tr_wp3_2.position.x = 4.500;
+	this->_tr_wp3_2.position.y = 1.000;
+	this->_tr_wp3_2.position.z = 0.000;
+	this->_tr_wp3_2.orientation = tf::createQuaternionMsgFromYaw(M_PI * 110 / 256);
 
 	//this->_tr_dp2.position.x = 1.065;
 	//this->_tr_dp2.position.y = 0.985;
