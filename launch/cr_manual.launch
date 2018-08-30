@@ -1,47 +1,40 @@
 <launch>
-<rosparam file="$(find nhk2018_main_ros)/param/joy_assign_wired.yaml" command="load" />
+<rosparam file="$(find cr18_main)/param/joy_assign_wireless.yaml" command="load" />
     <!-- base controller -->
-    <node pkg="base_controller" type="base_controller" name="base_ctrl" output="screen">
-       <param name="motor_max_acc" value="130.0" />
-       <param name="motor_max_vel" value="60.0" />
-       <param name="invert_x" value="false" />
-       <param name="invert_y" value="true" />
-       <param name="invert_z" value="false" />
-       <remap from="motor_cmd_vel" to="base/motor_cmd_vel" />
+    <node pkg="base_controller" type="base_controller" name="base_controller" output="screen">
+        <param name="motor_max_acc" value="200.000" />
+        <param name="motor_max_vel" value="37.699111843" />
+        <param name="motor_vel_coeff" value="33.333333333" />
+        <param name="robot_radius" value="0.150" />
+        <param name="invert_x" value="true" />
+        <param name="invert_y" value="true" />
+        <param name="invert_z" value="false" />
     </node>
     
     <!-- tr_main -->
-    <node pkg="nhk2018_main_ros" type="cr_main_joy" name="cr_main" output="screen">
+    <node pkg="cr18_main" type="cr_main_joy" name="cr_main" output="screen">
+        <rosparam param="lift_position">[0, 35, 35, 283, 531]</rosparam>
     </node>
     
     <!-- joy teleop -->
-    <node pkg="base_controller" type="base_teleop_joy" name="base_teleop_joy"/>
+    <node pkg="base_controller" type="base_teleop_joy" name="base_teleop_joy" output="screen">
+        <param name="max_lin" value="0.5" />
+        <param name="max_ang" value="1.570796327" />
+    </node>
     
     <!-- joy node -->
-    <node respawn="true" pkg="joy" type="joy_node" name="joy_node" >
+    <node respawn="true" pkg="joy" type="joy_node" name="joy_node">
         <param name="dev" type="string" value="/dev/input/js0" />
         <param name="deadzone" value="0.12" />
     </node>
-    
-    <!-- shutdown controller -->
-    <node pkg="base_controller" type="shutdown_controller_joy" name="shutdown_ctrl" />
-    
-    
-    <node pkg="nhk2018_main_ros" type="cr_can" name="cr_can" />
-    
-    <!-- usb_can -->
-    <node pkg="nhk2018_main_ros" type="usb_can_node" name="usb_can_node"/>
-    
-    <!-- hand itself -->
-    <node pkg="rosserial_server" type="serial_node" name="hands">
-<rosparam>
-port: /dev/ttyUSB1
-baud: 57600
-require:
-  publishers: [  ]
-  subscribers: [ shutdown ]
-</rosparam>
+
+    <!-- base itself -->
+    <node pkg="rosserial_server" type="serial_node" name="base">
+        <rosparam>
+            port: /dev/ttyUSB0
+            baud: 921600
+        </rosparam>
     </node>
-    
+
     <node pkg="rosserial_python" type="message_info_service.py" name="rosserial_message_info" />
 </launch>

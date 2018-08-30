@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 2.8.3)
-project(nhk2018_main_ros)
+project(cr18_main)
 
 ## Compile as C++11, supported in ROS Kinetic and newer
 add_compile_options(-std=c++11)
@@ -15,7 +15,7 @@ find_package(catkin REQUIRED COMPONENTS
   sensor_msgs
   tf
   tf2
-  can_msgs
+#  can_msgs
 #  message_generation
 )
 
@@ -134,38 +134,38 @@ include_directories(
 # catkin_add_nosetests(test)
 
 
-add_executable(${PROJECT_NAME}_tr_main_joy src/tr_main_joy.cpp)
-target_link_libraries(${PROJECT_NAME}_tr_main_joy ${catkin_LIBRARIES})
+#add_executable(${PROJECT_NAME}_tr_main_joy src/tr_main_joy.cpp)
+#target_link_libraries(${PROJECT_NAME}_tr_main_joy ${catkin_LIBRARIES})
 
 add_executable(cr_main_joy src/cr_main_joy.cpp)
 target_link_libraries(cr_main_joy ${catkin_LIBRARIES})
 
-add_executable(cr_main_semiauto_2v0 src/cr_main_semiauto_2v0.cpp)
-target_link_libraries(cr_main_semiauto_2v0 ${catkin_LIBRARIES})
+#add_executable(cr_main_semiauto_2v0 src/cr_main_semiauto_2v0.cpp)
+#target_link_libraries(cr_main_semiauto_2v0 ${catkin_LIBRARIES})
 
-add_executable(tr_main_auto_1v1 src/tr_main_auto_1v1.cpp)
-target_link_libraries(tr_main_auto_1v1 ${catkin_LIBRARIES})
+#add_executable(tr_main_auto_1v1 src/tr_main_auto_1v1.cpp)
+#target_link_libraries(tr_main_auto_1v1 ${catkin_LIBRARIES})
 
-add_executable(tr_main_auto_1v2 src/tr_main_auto_1v2.cpp)
-target_link_libraries(tr_main_auto_1v2 ${catkin_LIBRARIES})
+#add_executable(tr_main_auto_1v2 src/tr_main_auto_1v2.cpp)
+#target_link_libraries(tr_main_auto_1v2 ${catkin_LIBRARIES})
 
-add_executable(tr_main_auto_2v0 src/tr_main_auto_2v0.cpp)
-target_link_libraries(tr_main_auto_2v0 ${catkin_LIBRARIES})
+#add_executable(tr_main_auto_2v0 src/tr_main_auto_2v0.cpp)
+#target_link_libraries(tr_main_auto_2v0 ${catkin_LIBRARIES})
 
-add_executable(tr_launcher_unitTest src/tr_launcher_unitTest.cpp)
-target_link_libraries(tr_launcher_unitTest ${catkin_LIBRARIES})
+#add_executable(tr_launcher_unitTest src/tr_launcher_unitTest.cpp)
+#target_link_libraries(tr_launcher_unitTest ${catkin_LIBRARIES})
 
-add_executable(tr_can src/tr_can.cpp)
-target_link_libraries(tr_can ${catkin_LIBRARIES})
-add_dependencies(tr_can ${catkin_EXPORTED_TARGETS})
+#add_executable(tr_can src/tr_can.cpp)
+#target_link_libraries(tr_can ${catkin_LIBRARIES})
+#add_dependencies(tr_can ${catkin_EXPORTED_TARGETS})
 
-add_executable(cr_can src/cr_can.cpp)
-target_link_libraries(cr_can ${catkin_LIBRARIES})
-add_dependencies(cr_can ${catkin_EXPORTED_TARGETS})
+#add_executable(cr_can src/cr_can.cpp)
+#target_link_libraries(cr_can ${catkin_LIBRARIES})
+#add_dependencies(cr_can ${catkin_EXPORTED_TARGETS})
 
-add_executable(usb_can_node src/usb_can_node.cpp)
-target_link_libraries(usb_can_node ${catkin_LIBRARIES})
-add_dependencies(usb_can_node ${catkin_EXPORTED_TARGETS})
+#add_executable(usb_can_node src/usb_can_node.cpp)
+#target_link_libraries(usb_can_node ${catkin_LIBRARIES})
+#add_dependencies(usb_can_node ${catkin_EXPORTED_TARGETS})
 
 
 

@@ -7,93 +7,110 @@
 
 #include <ros/ros.h>
 #include <sensor_msgs/Joy.h>
-#include <std_msgs/UInt16.h>
+#include <std_msgs/Int32.h>
 #include <std_msgs/Bool.h>
+#include <std_msgs/Empty.h>
 #include <vector>
 #include <string>
 /*
-static constexpr int ButtonA = 0;
-static constexpr int ButtonB = 1;
-static constexpr int ButtonX = 2;
-static constexpr int ButtonY = 3;
-static constexpr int ButtonLB = 4;
-static constexpr int ButtonRB = 5;
-static constexpr int ButtonSelect = 6;
-static constexpr int ButtonStart = 7;
-static constexpr int ButtonLeftThumb = 8;
-static constexpr int ButtonRightThumb = 9;
+ static constexpr int ButtonA = 0;
+ static constexpr int ButtonB = 1;
+ static constexpr int ButtonX = 2;
+ static constexpr int ButtonY = 3;
+ static constexpr int ButtonLB = 4;
+ static constexpr int ButtonRB = 5;
+ static constexpr int ButtonSelect = 6;
+ static constexpr int ButtonStart = 7;
+ static constexpr int ButtonLeftThumb = 8;
+ static constexpr int ButtonRightThumb = 9;
 
-static constexpr int AxisDPadX = 6;
-static constexpr int AxisDPadY = 7;
-*/
+ static constexpr int AxisDPadX = 6;
+ static constexpr int AxisDPadY = 7;
+ */
 
-enum class CarrierStatus : uint16_t
-{
-	shutdown			= 0x0000,
-	reset				= 0x0001,
+enum class CarrierStatus
+    : uint16_t
+    {
+        shutdown = 0x0000,
+    reset = 0x0001,
 
-	/*
-	operational			= 0x0002,
+/*
+ operational			= 0x0002,
 
-	chuck0_chucked		= 0x0010,
-	chuck1_chucked		= 0x0020,
-	chuck2_chucked		= 0x0040,
-	chuck3_chucked		= 0x0080,
-	 */
+ chuck0_chucked		= 0x0010,
+ chuck1_chucked		= 0x0020,
+ chuck2_chucked		= 0x0040,
+ chuck3_chucked		= 0x0080,
+ */
 };
 
-enum class CarrierCommands : uint16_t
-{
-	shutdown_cmd		= 0x0000,
-	reset_cmd			= 0x0001,
-	/*
-	operational			= 0x0002,
-	 */
+enum class CarrierCommands
+    : uint16_t
+    {
+        shutdown_cmd = 0x0000,
+    reset_cmd = 0x0001,
+    /*
+     operational			= 0x0002,
+     */
 
-	chuck_cmd			= 0x0100,
-	unchuck_cmd			= 0x0200,
+    chuck_cmd = 0x0100,
+    unchuck_cmd = 0x0200,
 
-	chuck0				= 0x0010,
-	chuck1				= 0x0020,
-	chuck2				= 0x0040,
-	chuck3				= 0x0080,
+    chuck0 = 0x0010,
+    chuck1 = 0x0020,
+    chuck2 = 0x0040,
+    chuck3 = 0x0080,
 };
 
 class CrMain
 {
 public:
-	CrMain(void);
+    CrMain(void);
 
 private:
-	void shutdownCallback(const std_msgs::Bool::ConstPtr& msg);
-	void joyCallback(const sensor_msgs::Joy::ConstPtr& joy);
+    void shutdownInputCallback(const std_msgs::Empty::ConstPtr& msg);
+    void startInputCallback(const std_msgs::Empty::ConstPtr& msg);
+    void joyCallback(const sensor_msgs::Joy::ConstPtr& joy);
 
-	ros::NodeHandle nh_;
+    ros::NodeHandle nh_;
 
-	//int linear_, angular_;
-	ros::Subscriber joy_sub;
-	ros::Subscriber shutdown_sub;
-	ros::Publisher hand_cmd_pub;
-	//ros::Publisher hand_unchuck_thres_pub;
+    //int linear_, angular_;
+    ros::Subscriber joy_sub;
+    ros::Subscriber shutdown_input_sub;
+    ros::Subscriber start_input_sub;
 
-	std_msgs::UInt16 hand_cmd_msg;
-	//std_msgs::UInt16 hand_unchuck_thres_msg;
+    ros::Publisher lift_position_pub;
+    ros::Publisher hand_cylinder_pub;
+    ros::Publisher act_enable_pub;
 
-	bool _shutdown = false;
+    std_msgs::Int32 lift_position_msg;
+    std_msgs::Bool hand_cylinder_msg;
+    std_msgs::Bool act_enable_msg;
 
-	static int ButtonA;
-	static int ButtonB;
-	static int ButtonX;
-	static int ButtonY;
-	static int ButtonLB;
-	static int ButtonRB;
-	static int ButtonSelect;
-	static int ButtonStart;
-	static int ButtonLeftThumb;
-	static int ButtonRightThumb;
+    static constexpr double steps_per_mm = 32 * 200 * 3 / 40;
 
-	static int AxisDPadX;
-	static int AxisDPadY;
+    std::vector<int> lift_position = { 0, 0, 0, 0, 0 };
+    int lift_position_index = 0;
+    //		{0, -40 * steps_per_mm;
+    //static constexpr int lift_position_first = -40 * steps_per_mm;
+    //static constexpr int lift_position_second = lift_position_first - (248 * steps_per_mm);
+    //static constexpr int lift_position_third = lift_position_second - (248 * steps_per_mm);
+
+    bool _shutdown = false;
+
+    static int ButtonA;
+    static int ButtonB;
+    static int ButtonX;
+    static int ButtonY;
+    static int ButtonLB;
+    static int ButtonRB;
+    static int ButtonSelect;
+    static int ButtonStart;
+    static int ButtonLeftThumb;
+    static int ButtonRightThumb;
+
+    static int AxisDPadX;
+    static int AxisDPadY;
 };
 
 int CrMain::ButtonA = 0;
@@ -112,131 +129,171 @@ int CrMain::AxisDPadY = 7;
 
 CrMain::CrMain(void)
 {
-	joy_sub = nh_.subscribe<sensor_msgs::Joy>("joy", 10, &CrMain::joyCallback, this);
-	shutdown_sub = nh_.subscribe<std_msgs::Bool>("shutdown", 10, &CrMain::shutdownCallback, this);
+    joy_sub = nh_.subscribe<sensor_msgs::Joy>("joy", 10, &CrMain::joyCallback, this);
+    shutdown_input_sub = nh_.subscribe<std_msgs::Empty>("shutdown_input", 10, &CrMain::shutdownInputCallback, this);
+    start_input_sub = nh_.subscribe<std_msgs::Empty>("start_input", 10, &CrMain::startInputCallback, this);
 
-	this->hand_cmd_pub = nh_.advertise<std_msgs::UInt16>("hand/cmd", 1);
-	//this->hand_unchuck_thres_pub = nh_.advertise<std_msgs::UInt16>("hand/unchuck_thres", 1);
+    this->lift_position_pub = nh_.advertise<std_msgs::Int32>("lift_position", 1);
+    this->hand_cylinder_pub = nh_.advertise<std_msgs::Bool>("hand_cylinder", 1);
+    this->act_enable_pub = nh_.advertise<std_msgs::Bool>("act_enable", 1);
+    //this->hand_unchuck_thres_pub = nh_.advertise<std_msgs::UInt16>("hand/unchuck_thres", 1);
 
-	auto nh_priv = ros::NodeHandle("~");
-	//this->hand_thresholds = {0x0130, 0x0130, 0x0090};
-	//std::vector<int> tmp;
-	//nh_priv.getParam("unchuck_thres", tmp);
-	//if(tmp.size() == 3)
-	//{
-	//	this->hand_thresholds = tmp;
-	//}
-	//ROS_INFO("thresholds: %d, %d, %d", this->hand_thresholds[0], this->hand_thresholds[1], this->hand_thresholds[2]);
+    auto nh_priv = ros::NodeHandle("~");
+    //this->lift_position = {0, 0, 0, 0, 0};
+    std::vector<int> tmp;
+    nh_priv.getParam("lift_position", tmp);
+    if (tmp.size() == 5)
+    {
+        this->lift_position = tmp;
+    }
 
-	nh_.getParam("ButtonA", ButtonA);
-	nh_.getParam("ButtonB", ButtonB);
-	nh_.getParam("ButtonX", ButtonX);
-	nh_.getParam("ButtonY", ButtonY);
-	nh_.getParam("ButtonLB", ButtonLB);
-	nh_.getParam("ButtonRB", ButtonRB);
-	nh_.getParam("ButtonSelect", ButtonSelect);
-	nh_.getParam("ButtonStart", ButtonStart);
-	nh_.getParam("ButtonLeftThumb", ButtonLeftThumb);
-	nh_.getParam("ButtonRightThumb", ButtonRightThumb);
+    for (int& pos : this->lift_position)
+    {
+        pos *= (-steps_per_mm);
+    }
 
-	nh_.getParam("AxisDPadX", AxisDPadX);
-	nh_.getParam("AxisDPadY", AxisDPadY);
+    ROS_INFO("thresholds: %d, %d, %d, %d, %d", this->lift_position[0], this->lift_position[1], this->lift_position[2],
+            this->lift_position[3], this->lift_position[4]);
+
+    nh_.getParam("ButtonA", ButtonA);
+    nh_.getParam("ButtonB", ButtonB);
+    nh_.getParam("ButtonX", ButtonX);
+    nh_.getParam("ButtonY", ButtonY);
+    nh_.getParam("ButtonLB", ButtonLB);
+    nh_.getParam("ButtonRB", ButtonRB);
+    nh_.getParam("ButtonSelect", ButtonSelect);
+    nh_.getParam("ButtonStart", ButtonStart);
+    nh_.getParam("ButtonLeftThumb", ButtonLeftThumb);
+    nh_.getParam("ButtonRightThumb", ButtonRightThumb);
+
+    nh_.getParam("AxisDPadX", AxisDPadX);
+    nh_.getParam("AxisDPadY", AxisDPadY);
 }
 
-void CrMain::shutdownCallback(const std_msgs::Bool::ConstPtr& msg)
+void CrMain::shutdownInputCallback(const std_msgs::Empty::ConstPtr& msg)
 {
-	if(msg->data)
-	{
-		if(!this->_shutdown)
-		{
-			this->_shutdown = true;
+    if (!this->_shutdown)
+    {
+        this->_shutdown = true;
 
-			ROS_INFO("aborting.");
-		}
+        ROS_INFO("aborting.");
+    }
 
-		hand_cmd_msg.data = (uint16_t)CarrierCommands::shutdown_cmd;
-		hand_cmd_pub.publish(hand_cmd_msg);
-	}
-	else
-	{
-		if(this->_shutdown)
-		{
-			hand_cmd_msg.data = (uint16_t) CarrierCommands::reset_cmd;
-			hand_cmd_pub.publish(hand_cmd_msg);
+    // reset this:
+    // this->CurrentCommandIndex = -1;
+    lift_position_index = 0;
+}
 
-			this->_shutdown = false;
-		}
-	}
+void CrMain::startInputCallback(const std_msgs::Empty::ConstPtr& msg)
+{
+    // bring the robot back operational
+
+    ROS_INFO("starting.");
+
+    act_enable_msg.data = true;
+    act_enable_pub.publish(act_enable_msg);
+
+    this->_shutdown = false;
 }
 
 void CrMain::joyCallback(const sensor_msgs::Joy::ConstPtr& joy)
 {
-	static bool last_a = false;
-	static bool last_b = false;
-	static bool last_x = false;
-	static bool last_y = false;
-	//static int last_dpadXCmd = 0;
+    static bool last_a = false;
+    static bool last_b = false;
+    static bool last_x = false;
+    static bool last_y = false;
+    static bool last_lb = false;
+    static bool last_rb = false;
+    static bool last_start = false;
+    static bool last_select = false;
+    //static int last_dpadXCmd = 0;
 
-	bool _a = joy->buttons[ButtonA];
-	bool _b = joy->buttons[ButtonB];
-	bool _x = joy->buttons[ButtonX];
-	bool _y = joy->buttons[ButtonY];
+    bool _a = joy->buttons[ButtonA];
+    bool _b = joy->buttons[ButtonB];
+    bool _x = joy->buttons[ButtonX];
+    bool _y = joy->buttons[ButtonY];
+    bool _lb = joy->buttons[ButtonLB];
+    bool _rb = joy->buttons[ButtonRB];
+    bool _start = joy->buttons[ButtonStart];
+    bool _select = joy->buttons[ButtonSelect];
 
-	if(!this->_shutdown)
-	{
-		if(_a && !last_a)
-		{
-			// chuck all
-			hand_cmd_msg.data = (uint16_t)CarrierCommands::chuck_cmd
-					| (uint16_t)CarrierCommands::chuck0
-					| (uint16_t)CarrierCommands::chuck1
-					| (uint16_t)CarrierCommands::chuck2
-					| (uint16_t)CarrierCommands::chuck3;
-			hand_cmd_pub.publish(hand_cmd_msg);
-		}
-		else if(_b && !last_b)
-		{
-			// unchuck all
-			hand_cmd_msg.data = (uint16_t)CarrierCommands::unchuck_cmd
-					| (uint16_t)CarrierCommands::chuck0
-					| (uint16_t)CarrierCommands::chuck1
-					| (uint16_t)CarrierCommands::chuck2
-					| (uint16_t)CarrierCommands::chuck3;
-			hand_cmd_pub.publish(hand_cmd_msg);
-		}
-		else if(_x && !last_x)
-		{
-			// unchuck 2
-			hand_cmd_msg.data = (uint16_t)CarrierCommands::unchuck_cmd
-					| (uint16_t)CarrierCommands::chuck2 ;
-			hand_cmd_pub.publish(hand_cmd_msg);
-		}
-		else if(_y && !last_y)
-		{
-			// unchuck 0
-			hand_cmd_msg.data = (uint16_t)CarrierCommands::unchuck_cmd
-					| (uint16_t)CarrierCommands::chuck0 ;
-			hand_cmd_pub.publish(hand_cmd_msg);
-		}
-	}
+    if ((_start && !last_start) || (_select && !last_select))
+    {
+        if (!this->_shutdown)
+        {
+            this->_shutdown = true;
 
-	last_a = _a;
-	last_b = _b;
-	last_x = _x;
-	last_y = _y;
+            ROS_INFO("aborting.");
+        }
+
+        act_enable_msg.data = false;
+        act_enable_pub.publish(act_enable_msg);
+    }
+
+    if (!this->_shutdown)
+    {
+        if (_a && !last_a)
+        {
+            // chuck
+            hand_cylinder_msg.data = true;
+            hand_cylinder_pub.publish(hand_cylinder_msg);
+        }
+        else if (_b && !last_b)
+        {
+            // unchuck
+            hand_cylinder_msg.data = false;
+            hand_cylinder_pub.publish(hand_cylinder_msg);
+        }
+        else if (_x && !last_x)
+        {
+
+        }
+        else if (_y && !last_y)
+        {
+
+        }
+        else if (_lb && !last_lb)
+        {
+            // lower the lift
+            lift_position_index--;
+            if (lift_position_index < 0)
+            {
+                lift_position_index = 0;
+            }
+            lift_position_msg.data = lift_position[lift_position_index];
+            lift_position_pub.publish(lift_position_msg);
+        }
+        else if (_rb && !last_rb)
+        {
+            // raise the lift
+            lift_position_index++;
+            if (lift_position_index >= 5)
+            {
+                lift_position_index = 4;
+            }
+            lift_position_msg.data = lift_position[lift_position_index];
+            lift_position_pub.publish(lift_position_msg);
+        }
+    }
+
+    last_a = _a;
+    last_b = _b;
+    last_x = _x;
+    last_y = _y;
+    last_lb = _lb;
+    last_rb = _rb;
+    last_start = _start;
+    last_select = _select;
 }
-
 
 int main(int argc, char** argv)
 {
-	ros::init(argc, argv, "cr_main_joy");
+    ros::init(argc, argv, "cr_main_joy");
 
-	CrMain *crMain = new CrMain();
-	ROS_INFO("cr_main_joy node has started.");
+    CrMain *crMain = new CrMain();
+    ROS_INFO("cr_main_joy node has started.");
 
-	ros::spin();
-	ROS_INFO("cr_main_joy node has been terminated.");
+    ros::spin();
+    ROS_INFO("cr_main_joy node has been terminated.");
 }
-
-
 
