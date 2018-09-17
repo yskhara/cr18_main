@@ -2,7 +2,7 @@
 <rosparam file="$(find cr18_main)/param/joy_assign_wireless.yaml" command="load" />
     <!-- base controller -->
     <node pkg="base_controller" type="base_controller" name="base_controller" output="screen">
-        <param name="motor_max_acc" value="200.000" />
+        <param name="motor_max_acc" value="35.000" />
         <param name="motor_max_vel" value="37.699111843" />
         <param name="motor_vel_coeff" value="33.333333333" />
         <param name="robot_radius" value="0.150" />
@@ -13,7 +13,7 @@
     
     <!-- tr_main -->
     <node pkg="cr18_main" type="cr_main_joy" name="cr_main" output="screen">
-        <rosparam param="lift_position">[0, 35, 35, 283, 531]</rosparam>
+        <rosparam param="lift_position">[0, 35, 55, 303, 551]</rosparam>
     </node>
     
     <!-- joy teleop -->
