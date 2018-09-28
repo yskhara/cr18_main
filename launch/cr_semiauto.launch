@@ -1,5 +1,7 @@
 <launch>
-<rosparam file="$(find cr18_main)/param/joy_assign_wireless.yaml" command="load" />
+    <!-- import joy button/axis mapping settings -->
+    <rosparam file="$(find cr18_main)/param/joy_assign_wireless.yaml" command="load" />
+    
     <!-- base controller -->
     <node pkg="base_controller" type="base_controller" name="base_controller" output="screen">
         <param name="motor_max_acc" value="35.000" />
@@ -14,6 +16,15 @@
     <!-- tr_main -->
     <node pkg="cr18_main" type="cr_main_joy" name="cr_main" output="screen">
         <rosparam param="lift_position">[0, 35, 55, 303, 540]</rosparam>
+    </node>
+    
+    <node pkg="base_controller" type="odom_broadcaster" name="odom_brdcster">
+        <param name="ctrl_freq" value="10" />
+        <param name="odom_frame" value="map" />
+        
+        <remap from="/odom/yaw" to="/odom_raw/yaw" />
+        <remap from="/odom/x" to="/odom_raw/x" />
+        <remap from="/odom/y" to="/odom_raw/y" />
     </node>
     
     <!-- joy teleop -->
@@ -34,6 +45,17 @@
             port: /dev/ttyUSB0
             baud: 921600
         </rosparam>
+    </node>
+
+    <!-- odom -->
+    <node pkg="rosserial_server" type="serial_node" name="odom">
+        <rosparam>
+            port: /dev/ttyUSB1
+            baud: 921600
+        </rosparam>
+        <remap from="/odom/yaw" to="/odom_raw/yaw" />
+        <remap from="/odom/x" to="/odom_raw/x" />
+        <remap from="/odom/y" to="/odom_raw/y" />
     </node>
 
     <node pkg="rosserial_python" type="message_info_service.py" name="rosserial_message_info" />

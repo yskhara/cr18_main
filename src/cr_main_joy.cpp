@@ -87,7 +87,7 @@ private:
     std_msgs::Bool hand_cylinder_msg;
     std_msgs::Bool act_enable_msg;
 
-    static constexpr double steps_per_mm = 32 * 200 * 3 / 40;
+    double steps_per_mm = 16 * 200 * 3 / 40;
 
     std::vector<int> lift_position = { 0, 0, 0, 0, 0 };
     int lift_position_index = 0;
@@ -139,7 +139,9 @@ CrMain::CrMain(void)
     //this->hand_unchuck_thres_pub = nh_.advertise<std_msgs::UInt16>("hand/unchuck_thres", 1);
 
     auto nh_priv = ros::NodeHandle("~");
-    //this->lift_position = {0, 0, 0, 0, 0};
+
+    nh_priv.getParam("lift_step_per_mm", this->steps_per_mm);
+
     std::vector<int> tmp;
     nh_priv.getParam("lift_position", tmp);
     if (tmp.size() == 5)
@@ -152,7 +154,7 @@ CrMain::CrMain(void)
         pos *= (-steps_per_mm);
     }
 
-    ROS_INFO("thresholds: %d, %d, %d, %d, %d", this->lift_position[0], this->lift_position[1], this->lift_position[2],
+    ROS_INFO("lift_pos: %d, %d, %d, %d, %d", this->lift_position[0], this->lift_position[1], this->lift_position[2],
             this->lift_position[3], this->lift_position[4]);
 
     nh_.getParam("ButtonA", ButtonA);
@@ -262,6 +264,8 @@ void CrMain::joyCallback(const sensor_msgs::Joy::ConstPtr& joy)
             }
             lift_position_msg.data = lift_position[lift_position_index];
             lift_position_pub.publish(lift_position_msg);
+
+            //ROS_INFO("lift: %d")
         }
         else if (_rb && !last_rb)
         {
