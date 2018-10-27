@@ -14,7 +14,7 @@
     </node>
 
     <!-- tr_main -->
-    <node pkg="cr18_main" type="cr_main_semiauto" name="cr_main" output="screen">
+    <node pkg="cr18_main" type="cr_main_joy" name="cr_main" output="screen">
         <rosparam param="lift_position">[0, 35, 55, 303, 540]</rosparam>
     </node>
 
@@ -34,7 +34,7 @@
     <!-- odometry broadcaster -->
     <node pkg="base_controller" type="odom_publisher" name="odom_publisher" if="false">
         <param name="ctrl_freq" value="120" />
-        <param name="odom_frame" value="odom" />
+        <param name="odom_frame" value="map" />
 
         <remap from="/odom/yaw" to="/odom_raw/yaw" />
         <remap from="/odom/x" to="/odom_raw/x" />
@@ -44,7 +44,7 @@
     <!-- dummy odom -->
     <node pkg="navigation" type="dummy_odom" name="dummy_odom" if="true">
         <param name="freq" value="200" />
-        <param name="odom_frame" value="odom" />
+        <param name="odom_frame" value="map" />
     </node>
 
     <!-- dummy amcl -->
@@ -54,7 +54,7 @@
     <!-- odometry TF broadcaster -->
     <node pkg="navigation" type="odometry_broadcaster" name="odom_brdcster">
         <param name="freq" value="150" />
-        <param name="odom_frame" value="odom" />
+        <param name="odom_frame" value="map" />
         <param name="base_frame" value="odom_link" />
     </node>
 

@@ -5,7 +5,7 @@
         <param name="motor_max_acc" value="35.000" />
         <param name="motor_max_vel" value="37.699111843" />
         <param name="motor_vel_coeff" value="33.333333333" />
-        <param name="robot_radius" value="0.150" />
+        <param name="robot_radius" value="0.172125" />
         <param name="invert_x" value="true" />
         <param name="invert_y" value="true" />
         <param name="invert_z" value="false" />

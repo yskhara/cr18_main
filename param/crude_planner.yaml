@@ -1,0 +1,36 @@
+CrudePlanner:
+
+# Robot Configuration Parameters - TR
+
+  vel_lim_lin: 0.50         # choose slightly less than the base's capability
+  vel_lim_ang: 1.570796327  # choose slightly less than the base's capability
+  
+  acc_lim_lin: 0.5
+  acc_lim_ang: 1.5
+  
+  jerk_lim_lin: 0.2
+  jerk_lim_ang: 0.4
+  
+  manual_k_lin: false
+#  base_vel_k_lin: 1.5
+#  base_vel_k_ang: 1.5
+
+  base_vel_k_tan: 1.40
+  base_vel_k_nor: 1.50
+
+  #base_vel_k_ang: 1.75
+  base_vel_k_ang: 1.85
+
+# Goal Tolerance Parameters
+  goal_tolerance_ang: 0.025   # in radian? previously 0.3
+  goal_tolerance_lin: 0.05   # in metre,  previously 0.15
+  wp_tolerance_lin: 0.75      # trans waypoint tolerance in metre
+
+# Debugging
+  publish_traj_pc : true
+  publish_cost_grid_pc: true
+  global_frame_id: odom
+
+# Omni-drive robot configuration
+  holonomic_robot: true
+  

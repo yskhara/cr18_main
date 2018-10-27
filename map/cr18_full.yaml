@@ -1,0 +1,6 @@
+image: cr18_full.png
+resolution: 0.001
+origin: [-0.03, -0.03, 0.0]
+occupied_thresh: 0.65
+free_thresh: 0.196
+negate: 0

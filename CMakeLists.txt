@@ -140,8 +140,8 @@ include_directories(
 add_executable(cr_main_joy src/cr_main_joy.cpp)
 target_link_libraries(cr_main_joy ${catkin_LIBRARIES})
 
-#add_executable(cr_main_semiauto_2v0 src/cr_main_semiauto_2v0.cpp)
-#target_link_libraries(cr_main_semiauto_2v0 ${catkin_LIBRARIES})
+add_executable(cr_main_semiauto src/cr_main_semiauto.cpp)
+target_link_libraries(cr_main_semiauto ${catkin_LIBRARIES})
 
 #add_executable(tr_main_auto_1v1 src/tr_main_auto_1v1.cpp)
 #target_link_libraries(tr_main_auto_1v1 ${catkin_LIBRARIES})
