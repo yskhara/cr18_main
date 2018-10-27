@@ -32,7 +32,7 @@
     <node name="map_server" pkg="map_server" type="map_server" args="$(find cr18_main)/map/cr18_full.yaml" />
 
     <!-- odometry broadcaster -->
-    <node pkg="base_controller" type="odom_publisher" name="odom_publisher" if="false">
+    <node pkg="base_controller" type="odom_publisher" name="odom_publisher" if="true">
         <param name="ctrl_freq" value="120" />
         <param name="odom_frame" value="odom" />
 
@@ -42,7 +42,7 @@
     </node>
 
     <!-- dummy odom -->
-    <node pkg="navigation" type="dummy_odom" name="dummy_odom" if="true">
+    <node pkg="navigation" type="dummy_odom" name="dummy_odom" if="false">
         <param name="freq" value="200" />
         <param name="odom_frame" value="odom" />
     </node>

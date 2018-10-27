@@ -693,7 +693,7 @@ void CrMain::control_timer_callback(const ros::TimerEvent& event)
         if (this->_status == CRControllerStatus::standby)
         {
             // TODO: this is INSANE
-            if (this->_next_pressed || true)
+            if (this->_next_pressed)// || true)
             {
                 this->enable_actuators();
                 //this->restart();
@@ -829,7 +829,7 @@ void CrMain::control_timer_callback(const ros::TimerEvent& event)
         if (this->_status == CRControllerStatus::pp_pickingup)
         {
             // TODO: this is INSANE
-            if (this->_next_pressed || true)
+            if (this->_next_pressed)// || true)
             {
                 clear_flags();
 
