@@ -803,74 +803,134 @@ void CrMain::control_timer_callback(const ros::TimerEvent& event)
     }
     else if (currentCommand == CRControllerCommands::move_to_pp2)
     {
+        static bool _wp = true;
+
         if (this->_status == CRControllerStatus::moving)
         {
             if (this->_abort_pressed || this->_goal_reached)
             {
-                clear_flags();
-                this->_status = CRControllerStatus::motion_cplt;
+                if (_wp)
+                {
+                    clear_flags();
+                    this->_status = CRControllerStatus::motion_cplt;
 
-                this->currentCommandIndex++;
-                ROS_INFO("goal reached : pp2");
+                    //this->currentCommandIndex++;
+                    ROS_INFO("goal reached : pp2_wp");
+                    _wp = false;
+                }
+                else
+                {
+                    clear_flags();
+                    this->_status = CRControllerStatus::motion_cplt;
+
+                    this->currentCommandIndex++;
+                    ROS_INFO("goal reached : pp2");
+                    _wp = true;
+                }
             }
         }
         else
         {
-            this->publish_path_to(Coordinates::GetInstance()->get_cr_pp2(),
-                    Coordinates::GetInstance()->get_cr_pp2_wp1(), Coordinates::GetInstance()->get_cr_pp2_wp2());
+            if (_wp)
+            {
+                this->publish_path_to(Coordinates::GetInstance()->get_cr_pp2_wp2());
+            }
+            else
+            {
+                this->publish_path_to(Coordinates::GetInstance()->get_cr_pp2(),
+                        Coordinates::GetInstance()->get_cr_pp2_wp1(), Coordinates::GetInstance()->get_cr_pp2_wp2());
+            }
 
             clear_flags();
             this->_status = CRControllerStatus::moving;
-
-            this->unchuck();
         }
     }
     else if (currentCommand == CRControllerCommands::move_to_pp3)
     {
+        static bool _wp = true;
+
         if (this->_status == CRControllerStatus::moving)
         {
             if (this->_abort_pressed || this->_goal_reached)
             {
-                clear_flags();
-                this->_status = CRControllerStatus::motion_cplt;
+                if (_wp)
+                {
+                    clear_flags();
+                    this->_status = CRControllerStatus::motion_cplt;
 
-                this->currentCommandIndex++;
-                ROS_INFO("goal reached : pp3");
+                    //this->currentCommandIndex++;
+                    ROS_INFO("goal reached : pp3_wp");
+                    _wp = false;
+                }
+                else
+                {
+                    clear_flags();
+                    this->_status = CRControllerStatus::motion_cplt;
+
+                    this->currentCommandIndex++;
+                    ROS_INFO("goal reached : pp3");
+                    _wp = true;
+                }
             }
         }
         else
         {
-            this->publish_path_to(Coordinates::GetInstance()->get_cr_pp3(),
-                    Coordinates::GetInstance()->get_cr_pp3_wp1(), Coordinates::GetInstance()->get_cr_pp3_wp2());
+            if (_wp)
+            {
+                this->publish_path_to(Coordinates::GetInstance()->get_cr_pp3_wp2());
+            }
+            else
+            {
+                this->publish_path_to(Coordinates::GetInstance()->get_cr_pp3(),
+                        Coordinates::GetInstance()->get_cr_pp3_wp1(), Coordinates::GetInstance()->get_cr_pp3_wp2());
+            }
 
             clear_flags();
             this->_status = CRControllerStatus::moving;
-
-            this->unchuck();
         }
     }
     else if (currentCommand == CRControllerCommands::move_to_pp4)
     {
+        static bool _wp = true;
+
         if (this->_status == CRControllerStatus::moving)
         {
             if (this->_abort_pressed || this->_goal_reached)
             {
-                clear_flags();
-                this->_status = CRControllerStatus::motion_cplt;
+                if (_wp)
+                {
+                    clear_flags();
+                    this->_status = CRControllerStatus::motion_cplt;
 
-                this->currentCommandIndex++;
-                ROS_INFO("goal reached : pp4");
+                    //this->currentCommandIndex++;
+                    ROS_INFO("goal reached : pp4_wp");
+                    _wp = false;
+                }
+                else
+                {
+                    clear_flags();
+                    this->_status = CRControllerStatus::motion_cplt;
+
+                    this->currentCommandIndex++;
+                    ROS_INFO("goal reached : pp4");
+                    _wp = true;
+                }
             }
         }
         else
         {
-            this->publish_path_to(Coordinates::GetInstance()->get_cr_pp4(),
-                    Coordinates::GetInstance()->get_cr_pp4_wp1(), Coordinates::GetInstance()->get_cr_pp4_wp2());
+            if (_wp)
+            {
+                this->publish_path_to(Coordinates::GetInstance()->get_cr_pp4_wp2());
+            }
+            else
+            {
+                this->publish_path_to(Coordinates::GetInstance()->get_cr_pp4(),
+                        Coordinates::GetInstance()->get_cr_pp4_wp1(), Coordinates::GetInstance()->get_cr_pp4_wp2());
+            }
 
             clear_flags();
             this->_status = CRControllerStatus::moving;
-
-            this->unchuck();
         }
     }
     else if (currentCommand == CRControllerCommands::move_to_dp1)
