@@ -59,6 +59,7 @@ enum class CRControllerCommands
 
     rtb,                            // return to base
 
+    set_lift_p,                     // set chuck height for pick-up
     set_lift_1,                     // set chuck height to ground floor
     set_lift_2,                     // set chuck height to 2nd floor
     set_lift_3,                     // set chuck height to 3rd floor
@@ -243,6 +244,19 @@ CrMain::CrMain(void)
     auto private_nh = ros::NodeHandle("~");
     private_nh.param("amt_coeff", this->_amt_coeff, 0.25);
 
+    this->lift_position = {0, 51, 51 + 248, 51 + (2 * 248)};
+    std::vector<int> tmp;
+    private_nh.getParam("lift_position", tmp);
+    if(tmp.size() == 4)
+    {
+        this->lift_position = tmp;
+    }
+    for (int& pos : this->lift_position)
+    {
+        pos *= (-steps_per_mm);
+    }
+    ROS_INFO("thresholds: %d, %d, %d, %d", this->lift_position[0], this->lift_position[1], this->lift_position[2], this->lift_position[3]);
+
     nh_.getParam("ButtonA", ButtonA);
     nh_.getParam("ButtonB", ButtonB);
     nh_.getParam("ButtonX", ButtonX);
@@ -273,11 +287,12 @@ CrMain::CrMain(void)
 
 #ifdef FULL_OP
     // pickup at pp1
+    this->command_list.push_back(CRControllerCommands::set_lift_p);
     this->command_list.push_back(CRControllerCommands::move_to_pp1);
     this->command_list.push_back(CRControllerCommands::pp_pickup);
 
     // deliver at dp1 @ 2nd floor
-    this->command_list.push_back(CRControllerCommands::set_lift_2);
+    this->command_list.push_back(CRControllerCommands::set_lift_3);
     this->command_list.push_back(CRControllerCommands::move_to_dp1);
     this->command_list.push_back(CRControllerCommands::dp_deliver);
 
@@ -834,7 +849,7 @@ void CrMain::control_timer_callback(const ros::TimerEvent& event)
                 clear_flags();
 
                 this->chuck();
-                this->move_lift(1);
+                this->move_lift(0);
 
                 // move y +0.4
                 this->publish_path_to_relative(0.000, 0.400);
@@ -904,7 +919,7 @@ void CrMain::control_timer_callback(const ros::TimerEvent& event)
         }
         this->amt();
     }
-    else if (currentCommand == CRControllerCommands::set_lift_1)
+    else if (currentCommand == CRControllerCommands::set_lift_p)
     {
         clear_flags();
 
@@ -914,7 +929,7 @@ void CrMain::control_timer_callback(const ros::TimerEvent& event)
 
         this->currentCommandIndex++;
     }
-    else if (currentCommand == CRControllerCommands::set_lift_2)
+    else if (currentCommand == CRControllerCommands::set_lift_1)
     {
         clear_flags();
 
@@ -924,11 +939,19 @@ void CrMain::control_timer_callback(const ros::TimerEvent& event)
 
         this->currentCommandIndex++;
     }
+    else if (currentCommand == CRControllerCommands::set_lift_2)
+    {
+        clear_flags();
+        move_lift(2);
+        this->_status = CRControllerStatus::motion_cplt;
+        this->currentCommandIndex++;
+        ROS_INFO("lift position set: 2");
+    }
     else if (currentCommand == CRControllerCommands::set_lift_3)
     {
         clear_flags();
 
-        move_lift(2);
+        move_lift(3);
 
         this->_status = CRControllerStatus::motion_cplt;
 
