@@ -2,7 +2,7 @@ UselessPlanner:
 
 # Robot Configuration Parameters - TR
 
-  vel_lim_lin: 0.50 # choose slightly less than the base's capability
+  vel_lim_lin: 1.00 # choose slightly less than the base's capability
   
   # 遅い？
   # 回転角速度の最大値を上げるとき，k_angを適度に小さくしなきゃいけないと思う
