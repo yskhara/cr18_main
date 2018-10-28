@@ -1144,7 +1144,7 @@ void CrMain::control_timer_callback(const ros::TimerEvent& event)
                 this->move_lift(0);
 
                 // move y +0.4
-                this->publish_path_to_relative(0.000, 0.400);
+                this->publish_path_to_relative(0.000, 0.300);
 
                 this->_status = CRControllerStatus::moving;
 
@@ -1183,7 +1183,7 @@ void CrMain::control_timer_callback(const ros::TimerEvent& event)
                 this->unchuck();
 
                 // move y -0.4
-                this->publish_path_to_relative(0.000, -0.400);
+                this->publish_path_to_relative(0.000, -0.300);
 
                 this->_status = CRControllerStatus::moving;
 
