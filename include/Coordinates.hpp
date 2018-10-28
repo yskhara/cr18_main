@@ -207,7 +207,8 @@ Coordinates::Coordinates(void)
     this->_cr_pp1_wp1.orientation   = pp_orientation;
 
     this->_cr_pp1_wp2.position.x    = this->_cr_pp1.position.x;
-    this->_cr_pp1_wp2.position.y    = 0.900;
+    this->_cr_pp1_wp2.position.y    = 0.700;
+    //this->_cr_pp1_wp2.position.y    = 0.900;
     this->_cr_pp1_wp2.orientation   = pp_orientation;
 
 
@@ -268,7 +269,8 @@ Coordinates::Coordinates(void)
     this->_cr_dp1_wp1.orientation   = dp_orientation;
 
     this->_cr_dp1_wp2.position.x    = this->_cr_dp1.position.x;
-    this->_cr_dp1_wp2.position.y    = 1.700;
+    this->_cr_dp1_wp2.position.y    = 1.900;
+    //this->_cr_dp1_wp2.position.y    = 1.700;
     this->_cr_dp1_wp2.orientation   = dp_orientation;
 
     /*
