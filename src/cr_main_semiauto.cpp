@@ -324,6 +324,7 @@ CrMain::CrMain(void)
     this->command_list.push_back(CRControllerCommands::dp_deliver);
 
     // return to base
+    this->command_list.push_back(CRControllerCommands::set_lift_p);
     this->command_list.push_back(CRControllerCommands::rtb);
 
     this->command_list.push_back(CRControllerCommands::shutdown);
