@@ -16,7 +16,7 @@
 #include <nav_msgs/Path.h>
 #include <sensor_msgs/Joy.h>
 #include <std_msgs/Int32.h>
-#include <std_msgs/Empty.h>
+//#include <std_msgs/Empty.h>
 #include <tf/transform_listener.h>
 #include <vector>
 #include <string>
@@ -101,8 +101,8 @@ private:
     //void handStatusCallback(const std_msgs::UInt16::ConstPtr& msg);
     //void shutdownCallback(const std_msgs::Bool::ConstPtr& msg);
 
-    void shutdownInputCallback(const std_msgs::Empty::ConstPtr& msg);
-    void startInputCallback(const std_msgs::Empty::ConstPtr& msg);
+    void shutdownInputCallback(const std_msgs::Bool::ConstPtr& msg);
+    void startInputCallback(const std_msgs::Bool::ConstPtr& msg);
     void baseConfCallback(const std_msgs::UInt8::ConstPtr& msg);
 
     void joyCallback(const sensor_msgs::Joy::ConstPtr& joy);
@@ -259,8 +259,8 @@ CrMain::CrMain(void)
     //this->base_status_sub = nh_.subscribe<std_msgs::UInt16>("base/status", 10, &CrMain::baseStatusCallback, this);
     joy_sub = nh_.subscribe<sensor_msgs::Joy>("joy", 10, &CrMain::joyCallback, this);
 
-    shutdown_input_sub = nh_.subscribe<std_msgs::Empty>("shutdown_input", 10, &CrMain::shutdownInputCallback, this);
-    start_input_sub = nh_.subscribe<std_msgs::Empty>("start_input", 10, &CrMain::startInputCallback, this);
+    shutdown_input_sub = nh_.subscribe<std_msgs::Bool>("shutdown_input", 10, &CrMain::shutdownInputCallback, this);
+    start_input_sub = nh_.subscribe<std_msgs::Bool>("start_input", 10, &CrMain::startInputCallback, this);
 
     this->lift_position_pub = nh_.advertise<std_msgs::Int32>("lift_position", 1);
     this->hand_cylinder_pub = nh_.advertise<std_msgs::Bool>("hand_cylinder", 1);
@@ -374,7 +374,7 @@ void CrMain::handStatusCallback(const std_msgs::UInt16::ConstPtr& msg)
 }
 #endif
 
-void CrMain::shutdownInputCallback(const std_msgs::Empty::ConstPtr& msg)
+void CrMain::shutdownInputCallback(const std_msgs::Bool::ConstPtr& msg)
 {
     /*
     if (this->_status != ControllerStatus::shutdown)
@@ -384,6 +384,10 @@ void CrMain::shutdownInputCallback(const std_msgs::Empty::ConstPtr& msg)
 
         ROS_INFO("Aborting.");
     }*/
+    if(!msg->data)
+    {
+        return;
+    }
 
     ROS_INFO("base reported a shutdown input.");
     shutdown();
@@ -396,9 +400,14 @@ void CrMain::shutdownInputCallback(const std_msgs::Empty::ConstPtr& msg)
     lift_position_index = 0;
 }
 
-void CrMain::startInputCallback(const std_msgs::Empty::ConstPtr& msg)
+void CrMain::startInputCallback(const std_msgs::Bool::ConstPtr& msg)
 {
     // bring the robot back operational
+
+    if(!msg->data)
+    {
+        return;
+    }
 
     if (this->_status == ControllerStatus::shutdown)
     {
@@ -407,7 +416,7 @@ void CrMain::startInputCallback(const std_msgs::Empty::ConstPtr& msg)
 
         this->_status = ControllerStatus::reset;
         this->currentCommandIndex = 0;
-        ROS_INFO("Restarting.");
+        ROS_INFO("Restarting on start signal.");
 
         this->_has_base_restarted = true;
     }
