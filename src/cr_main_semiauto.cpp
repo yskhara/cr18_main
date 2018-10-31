@@ -855,6 +855,7 @@ void CrMain::control_timer_callback(const ros::TimerEvent& event)
 {
     if (this->command_list.size() <= this->currentCommandIndex)
     {
+        ROS_INFO("shutting down on an error: current command index is invalid.");
         this->shutdown();
 
         return;
@@ -874,6 +875,7 @@ void CrMain::control_timer_callback(const ros::TimerEvent& event)
 
     if (currentCommand == ControllerCommands::shutdown)
     {
+        ROS_INFO("shutting down on command.");
         this->shutdown();
     }
     else if (currentCommand == ControllerCommands::standby)
@@ -1433,6 +1435,28 @@ void CrMain::control_timer_callback(const ros::TimerEvent& event)
         }
         auto segno_index = std::distance(this->command_list.begin(), segno_iter);
         this->currentCommandIndex = segno_index;
+    }
+    else if (currentCommand == ControllerCommands::checkpoint_pp1)
+    {
+        this->currentCommandIndex++;
+    }
+    else if (currentCommand == ControllerCommands::checkpoint_pp2)
+    {
+        this->currentCommandIndex++;
+    }
+    else if (currentCommand == ControllerCommands::checkpoint_pp3)
+    {
+        this->currentCommandIndex++;
+    }
+    else if (currentCommand == ControllerCommands::checkpoint_pp4)
+    {
+        this->currentCommandIndex++;
+    }
+    else
+    {
+        ROS_INFO("shutting down on an error: an unknown command detected.");
+
+        this->shutdown();
     }
 }
 
