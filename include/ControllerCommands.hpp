@@ -98,8 +98,8 @@ const std::vector<ControllerCommands> CrMain::route1_pp4_op_commands( {
         ControllerCommands::shutdown, });
 
 const std::vector<ControllerCommands> CrMain::route2_op_commands( {
-    //standby at sz
-            ControllerCommands::standby,
+//standby at sz
+        ControllerCommands::standby,
 
         // pickup at pp1
         ControllerCommands::set_lift_p, ControllerCommands::move_to_pp1, ControllerCommands::pp_pickup,

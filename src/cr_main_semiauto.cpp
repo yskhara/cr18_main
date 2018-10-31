@@ -811,6 +811,7 @@ void CrMain::control_timer_callback(const ros::TimerEvent& event)
         {
             //this->unchuck_all();
 
+            ROS_INFO("setting initial position.");
             set_pose(RedCoordinates::GetInstance()->get_cr_sz());
 
             this->_next_pressed = false;
