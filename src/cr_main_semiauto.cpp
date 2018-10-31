@@ -26,7 +26,7 @@
 enum class OpMode
     : uint8_t
     {
-    route1_pp1_op = 0b000,        // sz -> pp1 -> pp2 -> pp3 -> pp4
+        route1_pp1_op = 0b000,        // sz -> pp1 -> pp2 -> pp3 -> pp4
     route1_pp2_op = 0b001,        // sz -> pp2 -> pp3 -> pp4
     route1_pp3_op = 0b010,        // sz -> pp3 -> pp4
     route1_pp4_op = 0b011,        // sz -> pp4
@@ -248,121 +248,79 @@ int CrMain::AxisLeftThumbX = 0;
 int CrMain::AxisLeftThumbY = 1;
 int CrMain::AxisRightThumbX = 2;
 
-const std::vector<ControllerCommands> CrMain::route1_op_commands
-(
-    {
-        //ControllerCommands::standby,
+const std::vector<ControllerCommands> CrMain::route1_op_commands( {
+//ControllerCommands::standby,
 
         ControllerCommands::checkpoint_pp1,
 
         // pickup at pp1
-        ControllerCommands::set_lift_p,
-        ControllerCommands::move_to_pp1,
-        ControllerCommands::pp_pickup,
+        ControllerCommands::set_lift_p, ControllerCommands::move_to_pp1, ControllerCommands::pp_pickup,
         // deliver at dp1 @ 2nd floor
-        ControllerCommands::set_lift_2,
-        ControllerCommands::move_to_dp1,
-        ControllerCommands::dp_deliver,
+        ControllerCommands::set_lift_2, ControllerCommands::move_to_dp1, ControllerCommands::dp_deliver,
 
         ControllerCommands::checkpoint_pp2,
 
         // pickup at pp2
-        ControllerCommands::set_lift_p,
-        ControllerCommands::move_to_pp2,
-        ControllerCommands::pp_pickup,
+        ControllerCommands::set_lift_p, ControllerCommands::move_to_pp2, ControllerCommands::pp_pickup,
         // deliver at dp1 @ 3rd floor
-        ControllerCommands::set_lift_3,
-        ControllerCommands::move_to_dp1,
-        ControllerCommands::dp_deliver,
+        ControllerCommands::set_lift_3, ControllerCommands::move_to_dp1, ControllerCommands::dp_deliver,
 
         ControllerCommands::checkpoint_pp3,
 
         // pickup at pp3
-        ControllerCommands::set_lift_p,
-        ControllerCommands::move_to_pp3,
-        ControllerCommands::pp_pickup,
+        ControllerCommands::set_lift_p, ControllerCommands::move_to_pp3, ControllerCommands::pp_pickup,
         // deliver at dp2 @ 3rd floor
-        ControllerCommands::set_lift_3,
-        ControllerCommands::move_to_dp2,
-        ControllerCommands::dp_deliver,
+        ControllerCommands::set_lift_3, ControllerCommands::move_to_dp2, ControllerCommands::dp_deliver,
 
         ControllerCommands::checkpoint_pp4,
 
         // pickup at pp4
-        ControllerCommands::set_lift_p,
-        ControllerCommands::move_to_pp4,
-        ControllerCommands::pp_pickup,
+        ControllerCommands::set_lift_p, ControllerCommands::move_to_pp4, ControllerCommands::pp_pickup,
 
         // deliver at dp2 @ 3rd floor
-        ControllerCommands::set_lift_3,
-        ControllerCommands::move_to_dp3,
-        ControllerCommands::dp_deliver,
+        ControllerCommands::set_lift_3, ControllerCommands::move_to_dp3, ControllerCommands::dp_deliver,
 
         // return to base
-        ControllerCommands::set_lift_p,
-        ControllerCommands::rtb,
+        ControllerCommands::set_lift_p, ControllerCommands::rtb,
 
-        ControllerCommands::shutdown,
-    }
-);
+        ControllerCommands::shutdown, });
 
-const std::vector<ControllerCommands> CrMain::route2_op_commands
-(
-    {
-        //ControllerCommands::standby,
+const std::vector<ControllerCommands> CrMain::route2_op_commands( {
+//ControllerCommands::standby,
 
         ControllerCommands::checkpoint_pp1,
 
         // pickup at pp1
-        ControllerCommands::set_lift_p,
-        ControllerCommands::move_to_pp1,
-        ControllerCommands::pp_pickup,
+        ControllerCommands::set_lift_p, ControllerCommands::move_to_pp1, ControllerCommands::pp_pickup,
         // deliver at dp2 @ 1st floor
-        ControllerCommands::set_lift_1,
-        ControllerCommands::move_to_dp2,
-        ControllerCommands::dp_deliver,
+        ControllerCommands::set_lift_1, ControllerCommands::move_to_dp2, ControllerCommands::dp_deliver,
 
         ControllerCommands::checkpoint_pp2,
 
         // pickup at pp2
-        ControllerCommands::set_lift_p,
-        ControllerCommands::move_to_pp2,
-        ControllerCommands::pp_pickup,
+        ControllerCommands::set_lift_p, ControllerCommands::move_to_pp2, ControllerCommands::pp_pickup,
         // deliver at dp2 @ 2nd floor
-        ControllerCommands::set_lift_2,
-        ControllerCommands::move_to_dp2,
-        ControllerCommands::dp_deliver,
+        ControllerCommands::set_lift_2, ControllerCommands::move_to_dp2, ControllerCommands::dp_deliver,
 
         ControllerCommands::checkpoint_pp3,
 
         // pickup at pp3
-        ControllerCommands::set_lift_p,
-        ControllerCommands::move_to_pp3,
-        ControllerCommands::pp_pickup,
+        ControllerCommands::set_lift_p, ControllerCommands::move_to_pp3, ControllerCommands::pp_pickup,
         // deliver at dp3 @ 2nd floor
-        ControllerCommands::set_lift_2,
-        ControllerCommands::move_to_dp3,
-        ControllerCommands::dp_deliver,
+        ControllerCommands::set_lift_2, ControllerCommands::move_to_dp3, ControllerCommands::dp_deliver,
 
         ControllerCommands::checkpoint_pp4,
 
         // pickup at pp4
-        ControllerCommands::set_lift_p,
-        ControllerCommands::move_to_pp4,
-        ControllerCommands::pp_pickup,
+        ControllerCommands::set_lift_p, ControllerCommands::move_to_pp4, ControllerCommands::pp_pickup,
 
         // deliver at dp4 @ 2nd floor
-        ControllerCommands::set_lift_2,
-        ControllerCommands::move_to_dp4,
-        ControllerCommands::dp_deliver,
+        ControllerCommands::set_lift_2, ControllerCommands::move_to_dp4, ControllerCommands::dp_deliver,
 
         // return to base
-        ControllerCommands::set_lift_p,
-        ControllerCommands::rtb,
+        ControllerCommands::set_lift_p, ControllerCommands::rtb,
 
-        ControllerCommands::shutdown,
-    }
-);
+        ControllerCommands::shutdown, });
 
 CrMain::CrMain(void)
 {
@@ -421,7 +379,7 @@ CrMain::CrMain(void)
     nh_.getParam("AxisLeftThumbY", AxisLeftThumbY);
     nh_.getParam("AxisRightThumbX", AxisRightThumbX);
 
-    command_list(64);
+    command_list.reserve(64);
 
     this->_status = ControllerStatus::shutdown;
 
@@ -536,59 +494,84 @@ void CrMain::baseConfCallback(const std_msgs::UInt8::ConstPtr& msg)
     {
         this->_op_mode = (OpMode) msg->data;
 
-        switch(this->_op_mode)
+        int index = 0;
+
+        switch (this->_op_mode)
         {
-            case OpMode::route1_pp1_op:
-                auto index = std::find(CrMain::route1_op_commands.begin(), CrMain::route1_op_commands.end(), ControllerCommands::checkpoint_pp1);
-                std::copy(CrMain::route1_op_commands.begin() + index, CrMain::route1_op_commands.end(), this->command_list.begin() + 1);
-                ROS_INFO("operation mode set to route1_pp1_op.");
-                break;
+        case OpMode::route1_pp1_op:
+            index = std::distance(CrMain::route1_op_commands.begin(),
+                    std::find(CrMain::route1_op_commands.begin(), CrMain::route1_op_commands.end(),
+                            ControllerCommands::checkpoint_pp1));
+            std::copy(CrMain::route1_op_commands.begin() + index, CrMain::route1_op_commands.end(),
+                    this->command_list.begin() + 1);
+            ROS_INFO("operation mode set to route1_pp1_op.");
+            break;
 
-            case OpMode::route1_pp2_op:
-                auto index = std::find(CrMain::route1_op_commands.begin(), CrMain::route1_op_commands.end(), ControllerCommands::checkpoint_pp2);
-                std::copy(CrMain::route1_op_commands.begin() + index, CrMain::route1_op_commands.end(), this->command_list.begin() + 1);
-                ROS_INFO("operation mode set to route1_pp2_op.");
-                break;
+        case OpMode::route1_pp2_op:
+            index = std::distance(CrMain::route1_op_commands.begin(),
+                    std::find(CrMain::route1_op_commands.begin(), CrMain::route1_op_commands.end(),
+                            ControllerCommands::checkpoint_pp2));
+            std::copy(CrMain::route1_op_commands.begin() + index, CrMain::route1_op_commands.end(),
+                    this->command_list.begin() + 1);
+            ROS_INFO("operation mode set to route1_pp2_op.");
+            break;
 
-            case OpMode::route1_pp3_op:
-                auto index = std::find(CrMain::route1_op_commands.begin(), CrMain::route1_op_commands.end(), ControllerCommands::checkpoint_pp3);
-                std::copy(CrMain::route1_op_commands.begin() + index, CrMain::route1_op_commands.end(), this->command_list.begin() + 1);
-                ROS_INFO("operation mode set to route1_pp3_op.");
-                break;
+        case OpMode::route1_pp3_op:
+            index = std::distance(CrMain::route1_op_commands.begin(),
+                    std::find(CrMain::route1_op_commands.begin(), CrMain::route1_op_commands.end(),
+                            ControllerCommands::checkpoint_pp3));
+            std::copy(CrMain::route1_op_commands.begin() + index, CrMain::route1_op_commands.end(),
+                    this->command_list.begin() + 1);
+            ROS_INFO("operation mode set to route1_pp3_op.");
+            break;
 
-            case OpMode::route1_pp4_op:
-                auto index = std::find(CrMain::route1_op_commands.begin(), CrMain::route1_op_commands.end(), ControllerCommands::checkpoint_pp4);
-                std::copy(CrMain::route1_op_commands.begin() + index, CrMain::route1_op_commands.end(), this->command_list.begin() + 1);
-                ROS_INFO("operation mode set to route1_pp4_op.");
-                break;
+        case OpMode::route1_pp4_op:
+            index = std::distance(CrMain::route1_op_commands.begin(),
+                    std::find(CrMain::route1_op_commands.begin(), CrMain::route1_op_commands.end(),
+                            ControllerCommands::checkpoint_pp4));
+            std::copy(CrMain::route1_op_commands.begin() + index, CrMain::route1_op_commands.end(),
+                    this->command_list.begin() + 1);
+            ROS_INFO("operation mode set to route1_pp4_op.");
+            break;
 
+        case OpMode::route2_pp1_op:
+            index = std::distance(CrMain::route2_op_commands.begin(),
+                    std::find(CrMain::route2_op_commands.begin(), CrMain::route2_op_commands.end(),
+                            ControllerCommands::checkpoint_pp1));
+            std::copy(CrMain::route2_op_commands.begin() + index, CrMain::route2_op_commands.end(),
+                    this->command_list.begin() + 1);
+            ROS_INFO("operation mode set to route2_pp1_op.");
+            break;
 
-            case OpMode::route2_pp1_op:
-                auto index = std::find(CrMain::route2_op_commands.begin(), CrMain::route2_op_commands.end(), ControllerCommands::checkpoint_pp1);
-                std::copy(CrMain::route2_op_commands.begin() + index, CrMain::route2_op_commands.end(), this->command_list.begin() + 1);
-                ROS_INFO("operation mode set to route2_pp1_op.");
-                break;
+        case OpMode::route2_pp2_op:
+            index = std::distance(CrMain::route2_op_commands.begin(),
+                    std::find(CrMain::route2_op_commands.begin(), CrMain::route2_op_commands.end(),
+                            ControllerCommands::checkpoint_pp2));
+            std::copy(CrMain::route2_op_commands.begin() + index, CrMain::route2_op_commands.end(),
+                    this->command_list.begin() + 1);
+            ROS_INFO("operation mode set to route2_pp2_op.");
+            break;
 
-            case OpMode::route2_pp2_op:
-                auto index = std::find(CrMain::route2_op_commands.begin(), CrMain::route2_op_commands.end(), ControllerCommands::checkpoint_pp2);
-                std::copy(CrMain::route2_op_commands.begin() + index, CrMain::route2_op_commands.end(), this->command_list.begin() + 1);
-                ROS_INFO("operation mode set to route2_pp2_op.");
-                break;
+        case OpMode::route2_pp3_op:
+            index = std::distance(CrMain::route2_op_commands.begin(),
+                    std::find(CrMain::route2_op_commands.begin(), CrMain::route2_op_commands.end(),
+                            ControllerCommands::checkpoint_pp3));
+            std::copy(CrMain::route2_op_commands.begin() + index, CrMain::route2_op_commands.end(),
+                    this->command_list.begin() + 1);
+            ROS_INFO("operation mode set to route2_pp3_op.");
+            break;
 
-            case OpMode::route2_pp3_op:
-                auto index = std::find(CrMain::route2_op_commands.begin(), CrMain::route2_op_commands.end(), ControllerCommands::checkpoint_pp3);
-                std::copy(CrMain::route2_op_commands.begin() + index, CrMain::route2_op_commands.end(), this->command_list.begin() + 1);
-                ROS_INFO("operation mode set to route2_pp3_op.");
-                break;
+        case OpMode::route2_pp4_op:
+            index = std::distance(CrMain::route2_op_commands.begin(),
+                    std::find(CrMain::route2_op_commands.begin(), CrMain::route2_op_commands.end(),
+                            ControllerCommands::checkpoint_pp4));
+            std::copy(CrMain::route2_op_commands.begin() + index, CrMain::route2_op_commands.end(),
+                    this->command_list.begin() + 1);
+            ROS_INFO("operation mode set to route2_pp4_op.");
+            break;
 
-            case OpMode::route2_pp4_op:
-                auto index = std::find(CrMain::route2_op_commands.begin(), CrMain::route2_op_commands.end(), ControllerCommands::checkpoint_pp4);
-                std::copy(CrMain::route2_op_commands.begin() + index, CrMain::route2_op_commands.end(), this->command_list.begin() + 1);
-                ROS_INFO("operation mode set to route2_pp4_op.");
-                break;
-
-            default:
-                break;
+        default:
+            break;
         }
 
         this->command_list[0] = ControllerCommands::standby;
