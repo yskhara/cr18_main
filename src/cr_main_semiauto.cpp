@@ -385,6 +385,7 @@ void CrMain::shutdownInputCallback(const std_msgs::Empty::ConstPtr& msg)
         ROS_INFO("Aborting.");
     }*/
 
+    ROS_INFO("base reported a shutdown input.");
     shutdown();
 
     // reset this:
@@ -515,6 +516,7 @@ void CrMain::joyCallback(const sensor_msgs::Joy::ConstPtr& joy)
 
     if (_start)
     {
+        ROS_INFO("shutdown command from controller.");
         this->shutdown();
     }
 
@@ -1333,6 +1335,7 @@ void CrMain::control_timer_callback(const ros::TimerEvent& event)
         if (segno_iter == this->command_list->end())
         {
             // abort on error
+            ROS_INFO("segno was not found.");
             this->shutdown();
         }
         auto segno_index = std::distance(this->command_list->begin(), segno_iter);
