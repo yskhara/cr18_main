@@ -6,6 +6,7 @@
  */
 
 #include <ros/ros.h>
+#include <std_msgs/UInt8.h>
 #include <std_msgs/UInt16.h>
 #include <std_msgs/Float64.h>
 #include <std_msgs/Bool.h>
@@ -22,7 +23,21 @@
 
 #include "Coordinates.hpp"
 
-enum class CRControllerStatus
+enum class OpMode
+    : uint8_t
+    {
+    route1_pp1_op = 0b000,        // sz -> pp1 -> pp2 -> pp3 -> pp4
+    route1_pp2_op = 0b001,        // sz -> pp2 -> pp3 -> pp4
+    route1_pp3_op = 0b010,        // sz -> pp3 -> pp4
+    route1_pp4_op = 0b011,        // sz -> pp4
+
+    route2_pp1_op = 0b100,        // sz -> pp1 -> pp2 -> pp3 -> pp4
+    route2_pp2_op = 0b101,        // sz -> pp2 -> pp3 -> pp4
+    route2_pp3_op = 0b110,        // sz -> pp3 -> pp4
+    route2_pp4_op = 0b111,        // sz -> pp4
+};
+
+enum class ControllerStatus
     : uint16_t
     {
         shutdown = 0x0000,
@@ -36,7 +51,7 @@ enum class CRControllerStatus
     dp_delivering,				// delivering a shuttle at a DP
 };
 
-enum class CRControllerCommands
+enum class ControllerCommands
     : uint16_t
     {
         shutdown,						// shutdown
@@ -69,6 +84,11 @@ enum class CRControllerCommands
 
     segno,
     dal_segno,
+
+    checkpoint_pp1,
+    checkpoint_pp2,
+    checkpoint_pp3,
+    checkpoint_pp4,
 };
 
 class CrMain
@@ -83,6 +103,8 @@ private:
 
     void shutdownInputCallback(const std_msgs::Empty::ConstPtr& msg);
     void startInputCallback(const std_msgs::Empty::ConstPtr& msg);
+    void baseConfCallback(const std_msgs::UInt8::ConstPtr& msg);
+
     void joyCallback(const sensor_msgs::Joy::ConstPtr& joy);
 
     void goalReachedCallback(const std_msgs::Bool::ConstPtr& msg);
@@ -125,9 +147,16 @@ private:
     //static constexpr int lift_position_second = lift_position_first - (248 * steps_per_mm);
     //static constexpr int lift_position_third = lift_position_second - (248 * steps_per_mm);
 
+    OpMode _op_mode = OpMode::route1_pp1_op;
+
     int currentCommandIndex = -1;
-    std::vector<CRControllerCommands> command_list;
-    CRControllerStatus _status;
+    std::vector<ControllerCommands> command_list;
+    static const std::vector<ControllerCommands> route1_op_commands;
+    static const std::vector<ControllerCommands> route2_op_commands;
+    static const std::vector<ControllerCommands> default_commands;
+
+    //std::vector<ControllerCommands> command_list;
+    ControllerStatus _status;
 
     double _amt_coeff;
     double _target_x = 0.0;
@@ -219,6 +248,122 @@ int CrMain::AxisLeftThumbX = 0;
 int CrMain::AxisLeftThumbY = 1;
 int CrMain::AxisRightThumbX = 2;
 
+const std::vector<ControllerCommands> CrMain::route1_op_commands
+(
+    {
+        //ControllerCommands::standby,
+
+        ControllerCommands::checkpoint_pp1,
+
+        // pickup at pp1
+        ControllerCommands::set_lift_p,
+        ControllerCommands::move_to_pp1,
+        ControllerCommands::pp_pickup,
+        // deliver at dp1 @ 2nd floor
+        ControllerCommands::set_lift_2,
+        ControllerCommands::move_to_dp1,
+        ControllerCommands::dp_deliver,
+
+        ControllerCommands::checkpoint_pp2,
+
+        // pickup at pp2
+        ControllerCommands::set_lift_p,
+        ControllerCommands::move_to_pp2,
+        ControllerCommands::pp_pickup,
+        // deliver at dp1 @ 3rd floor
+        ControllerCommands::set_lift_3,
+        ControllerCommands::move_to_dp1,
+        ControllerCommands::dp_deliver,
+
+        ControllerCommands::checkpoint_pp3,
+
+        // pickup at pp3
+        ControllerCommands::set_lift_p,
+        ControllerCommands::move_to_pp3,
+        ControllerCommands::pp_pickup,
+        // deliver at dp2 @ 3rd floor
+        ControllerCommands::set_lift_3,
+        ControllerCommands::move_to_dp2,
+        ControllerCommands::dp_deliver,
+
+        ControllerCommands::checkpoint_pp4,
+
+        // pickup at pp4
+        ControllerCommands::set_lift_p,
+        ControllerCommands::move_to_pp4,
+        ControllerCommands::pp_pickup,
+
+        // deliver at dp2 @ 3rd floor
+        ControllerCommands::set_lift_3,
+        ControllerCommands::move_to_dp3,
+        ControllerCommands::dp_deliver,
+
+        // return to base
+        ControllerCommands::set_lift_p,
+        ControllerCommands::rtb,
+
+        ControllerCommands::shutdown,
+    }
+);
+
+const std::vector<ControllerCommands> CrMain::route2_op_commands
+(
+    {
+        //ControllerCommands::standby,
+
+        ControllerCommands::checkpoint_pp1,
+
+        // pickup at pp1
+        ControllerCommands::set_lift_p,
+        ControllerCommands::move_to_pp1,
+        ControllerCommands::pp_pickup,
+        // deliver at dp2 @ 1st floor
+        ControllerCommands::set_lift_1,
+        ControllerCommands::move_to_dp2,
+        ControllerCommands::dp_deliver,
+
+        ControllerCommands::checkpoint_pp2,
+
+        // pickup at pp2
+        ControllerCommands::set_lift_p,
+        ControllerCommands::move_to_pp2,
+        ControllerCommands::pp_pickup,
+        // deliver at dp2 @ 2nd floor
+        ControllerCommands::set_lift_2,
+        ControllerCommands::move_to_dp2,
+        ControllerCommands::dp_deliver,
+
+        ControllerCommands::checkpoint_pp3,
+
+        // pickup at pp3
+        ControllerCommands::set_lift_p,
+        ControllerCommands::move_to_pp3,
+        ControllerCommands::pp_pickup,
+        // deliver at dp3 @ 2nd floor
+        ControllerCommands::set_lift_2,
+        ControllerCommands::move_to_dp3,
+        ControllerCommands::dp_deliver,
+
+        ControllerCommands::checkpoint_pp4,
+
+        // pickup at pp4
+        ControllerCommands::set_lift_p,
+        ControllerCommands::move_to_pp4,
+        ControllerCommands::pp_pickup,
+
+        // deliver at dp4 @ 2nd floor
+        ControllerCommands::set_lift_2,
+        ControllerCommands::move_to_dp4,
+        ControllerCommands::dp_deliver,
+
+        // return to base
+        ControllerCommands::set_lift_p,
+        ControllerCommands::rtb,
+
+        ControllerCommands::shutdown,
+    }
+);
+
 CrMain::CrMain(void)
 {
     //this->hand_status_sub = nh_.subscribe<std_msgs::UInt16>("hand/status", 10, &CrMain::handStatusCallback, this);
@@ -244,10 +389,11 @@ CrMain::CrMain(void)
     auto private_nh = ros::NodeHandle("~");
     private_nh.param("amt_coeff", this->_amt_coeff, 0.25);
 
-    this->lift_position = {0, 51, 51 + 248, 51 + (2 * 248)};
+    this->lift_position =
+    {   0, 51, 51 + 248, 51 + (2 * 248)};
     std::vector<int> tmp;
     private_nh.getParam("lift_position", tmp);
-    if(tmp.size() == 4)
+    if (tmp.size() == 4)
     {
         this->lift_position = tmp;
     }
@@ -255,7 +401,8 @@ CrMain::CrMain(void)
     {
         pos *= (-steps_per_mm);
     }
-    ROS_INFO("thresholds: %d, %d, %d, %d", this->lift_position[0], this->lift_position[1], this->lift_position[2], this->lift_position[3]);
+    ROS_INFO("thresholds: %d, %d, %d, %d", this->lift_position[0], this->lift_position[1], this->lift_position[2],
+            this->lift_position[3]);
 
     nh_.getParam("ButtonA", ButtonA);
     nh_.getParam("ButtonB", ButtonB);
@@ -274,63 +421,9 @@ CrMain::CrMain(void)
     nh_.getParam("AxisLeftThumbY", AxisLeftThumbY);
     nh_.getParam("AxisRightThumbX", AxisRightThumbX);
 
-    /*
-     * Initialize Control Sequence
-     */
+    command_list(64);
 
-    this->command_list.clear();
-    this->command_list.push_back(CRControllerCommands::standby);
-
-//#define UNIT_TEST
-//#define TZ1_TEST
-#define FULL_OP
-
-#ifdef FULL_OP
-    // pickup at pp1
-    this->command_list.push_back(CRControllerCommands::set_lift_p);
-    this->command_list.push_back(CRControllerCommands::move_to_pp1);
-    this->command_list.push_back(CRControllerCommands::pp_pickup);
-    // deliver at dp1 @ 2nd floor
-    this->command_list.push_back(CRControllerCommands::set_lift_2);
-    this->command_list.push_back(CRControllerCommands::move_to_dp1);
-    this->command_list.push_back(CRControllerCommands::dp_deliver);
-
-    // pickup at pp2
-    this->command_list.push_back(CRControllerCommands::set_lift_p);
-    this->command_list.push_back(CRControllerCommands::move_to_pp2);
-    this->command_list.push_back(CRControllerCommands::pp_pickup);
-    // deliver at dp1 @ 3nd floor
-    this->command_list.push_back(CRControllerCommands::set_lift_3);
-    this->command_list.push_back(CRControllerCommands::move_to_dp1);
-    this->command_list.push_back(CRControllerCommands::dp_deliver);
-
-    // pickup at pp3
-    this->command_list.push_back(CRControllerCommands::set_lift_p);
-    this->command_list.push_back(CRControllerCommands::move_to_pp3);
-    this->command_list.push_back(CRControllerCommands::pp_pickup);
-    // deliver at dp2 @ 3nd floor
-    this->command_list.push_back(CRControllerCommands::set_lift_3);
-    this->command_list.push_back(CRControllerCommands::move_to_dp2);
-    this->command_list.push_back(CRControllerCommands::dp_deliver);
-
-    // pickup at pp3
-    this->command_list.push_back(CRControllerCommands::set_lift_p);
-    this->command_list.push_back(CRControllerCommands::move_to_pp4);
-    this->command_list.push_back(CRControllerCommands::pp_pickup);
-
-    // deliver at dp2 @ 3nd floor
-    this->command_list.push_back(CRControllerCommands::set_lift_3);
-    this->command_list.push_back(CRControllerCommands::move_to_dp3);
-    this->command_list.push_back(CRControllerCommands::dp_deliver);
-
-    // return to base
-    this->command_list.push_back(CRControllerCommands::set_lift_p);
-    this->command_list.push_back(CRControllerCommands::rtb);
-
-    this->command_list.push_back(CRControllerCommands::shutdown);
-#endif
-
-    this->_status = CRControllerStatus::shutdown;
+    this->_status = ControllerStatus::shutdown;
 
     // timer starts immediately
     control_timer = nh_.createTimer(ros::Duration(0.1), &CrMain::control_timer_callback, this);
@@ -392,9 +485,9 @@ void CrMain::handStatusCallback(const std_msgs::UInt16::ConstPtr& msg)
 
 void CrMain::shutdownInputCallback(const std_msgs::Empty::ConstPtr& msg)
 {
-    if (this->_status != CRControllerStatus::shutdown)
+    if (this->_status != ControllerStatus::shutdown)
     {
-        this->_status = CRControllerStatus::shutdown;
+        this->_status = ControllerStatus::shutdown;
         this->currentCommandIndex = -1;
 
         ROS_INFO("Aborting.");
@@ -412,12 +505,12 @@ void CrMain::startInputCallback(const std_msgs::Empty::ConstPtr& msg)
 {
     // bring the robot back operational
 
-    if (this->_status == CRControllerStatus::shutdown)
+    if (this->_status == ControllerStatus::shutdown)
     {
         act_enable_msg.data = true;
         act_enable_pub.publish(act_enable_msg);
 
-        this->_status = CRControllerStatus::reset;
+        this->_status = ControllerStatus::reset;
         this->currentCommandIndex = 0;
         ROS_INFO("Restarting.");
 
@@ -427,8 +520,78 @@ void CrMain::startInputCallback(const std_msgs::Empty::ConstPtr& msg)
     {
         ROS_WARN("An illegal start command received while the controller is not in shutdown state. Aborting.");
 
-        this->_status = CRControllerStatus::shutdown;
+        this->_status = ControllerStatus::shutdown;
         this->currentCommandIndex = -1;
+    }
+}
+
+void CrMain::baseConfCallback(const std_msgs::UInt8::ConstPtr& msg)
+{
+    if (this->currentCommandIndex != -1 && this->currentCommandIndex != 0)
+    {
+        return;
+    }
+
+    if (this->_op_mode != (OpMode) msg->data)
+    {
+        this->_op_mode = (OpMode) msg->data;
+
+        switch(this->_op_mode)
+        {
+            case OpMode::route1_pp1_op:
+                auto index = std::find(CrMain::route1_op_commands.begin(), CrMain::route1_op_commands.end(), ControllerCommands::checkpoint_pp1);
+                std::copy(CrMain::route1_op_commands.begin() + index, CrMain::route1_op_commands.end(), this->command_list.begin() + 1);
+                ROS_INFO("operation mode set to route1_pp1_op.");
+                break;
+
+            case OpMode::route1_pp2_op:
+                auto index = std::find(CrMain::route1_op_commands.begin(), CrMain::route1_op_commands.end(), ControllerCommands::checkpoint_pp2);
+                std::copy(CrMain::route1_op_commands.begin() + index, CrMain::route1_op_commands.end(), this->command_list.begin() + 1);
+                ROS_INFO("operation mode set to route1_pp2_op.");
+                break;
+
+            case OpMode::route1_pp3_op:
+                auto index = std::find(CrMain::route1_op_commands.begin(), CrMain::route1_op_commands.end(), ControllerCommands::checkpoint_pp3);
+                std::copy(CrMain::route1_op_commands.begin() + index, CrMain::route1_op_commands.end(), this->command_list.begin() + 1);
+                ROS_INFO("operation mode set to route1_pp3_op.");
+                break;
+
+            case OpMode::route1_pp4_op:
+                auto index = std::find(CrMain::route1_op_commands.begin(), CrMain::route1_op_commands.end(), ControllerCommands::checkpoint_pp4);
+                std::copy(CrMain::route1_op_commands.begin() + index, CrMain::route1_op_commands.end(), this->command_list.begin() + 1);
+                ROS_INFO("operation mode set to route1_pp4_op.");
+                break;
+
+
+            case OpMode::route2_pp1_op:
+                auto index = std::find(CrMain::route2_op_commands.begin(), CrMain::route2_op_commands.end(), ControllerCommands::checkpoint_pp1);
+                std::copy(CrMain::route2_op_commands.begin() + index, CrMain::route2_op_commands.end(), this->command_list.begin() + 1);
+                ROS_INFO("operation mode set to route2_pp1_op.");
+                break;
+
+            case OpMode::route2_pp2_op:
+                auto index = std::find(CrMain::route2_op_commands.begin(), CrMain::route2_op_commands.end(), ControllerCommands::checkpoint_pp2);
+                std::copy(CrMain::route2_op_commands.begin() + index, CrMain::route2_op_commands.end(), this->command_list.begin() + 1);
+                ROS_INFO("operation mode set to route2_pp2_op.");
+                break;
+
+            case OpMode::route2_pp3_op:
+                auto index = std::find(CrMain::route2_op_commands.begin(), CrMain::route2_op_commands.end(), ControllerCommands::checkpoint_pp3);
+                std::copy(CrMain::route2_op_commands.begin() + index, CrMain::route2_op_commands.end(), this->command_list.begin() + 1);
+                ROS_INFO("operation mode set to route2_pp3_op.");
+                break;
+
+            case OpMode::route2_pp4_op:
+                auto index = std::find(CrMain::route2_op_commands.begin(), CrMain::route2_op_commands.end(), ControllerCommands::checkpoint_pp4);
+                std::copy(CrMain::route2_op_commands.begin() + index, CrMain::route2_op_commands.end(), this->command_list.begin() + 1);
+                ROS_INFO("operation mode set to route2_pp4_op.");
+                break;
+
+            default:
+                break;
+        }
+
+        this->command_list[0] = ControllerCommands::standby;
     }
 }
 
@@ -544,7 +707,7 @@ void CrMain::shutdown(void)
 
     clear_flags();
 
-    this->_status = CRControllerStatus::shutdown;
+    this->_status = ControllerStatus::shutdown;
 }
 
 void CrMain::enable_actuators(void)
@@ -710,7 +873,7 @@ void CrMain::control_timer_callback(const ros::TimerEvent& event)
         return;
     }
 
-    if (this->_status == CRControllerStatus::shutdown)
+    if (this->_status == ControllerStatus::shutdown)
     {
         return;
     }
@@ -720,31 +883,32 @@ void CrMain::control_timer_callback(const ros::TimerEvent& event)
         this->currentCommandIndex = 0;
     }
 
-    CRControllerCommands currentCommand = this->command_list.at(this->currentCommandIndex);
+    ControllerCommands currentCommand = this->command_list.at(this->currentCommandIndex);
 
-    if (currentCommand == CRControllerCommands::shutdown)
+    if (currentCommand == ControllerCommands::shutdown)
     {
         this->shutdown();
     }
-    else if (currentCommand == CRControllerCommands::standby)
+    else if (currentCommand == ControllerCommands::standby)
     {
         if (!this->_has_base_restarted)
         {
             return;
         }
 
-        if (this->_status == CRControllerStatus::standby)
+        if (this->_status == ControllerStatus::standby)
         {
             // TODO: this is INSANE
-            if (this->_next_pressed)// || true)
+            if (this->_next_pressed)    // || true)
             {
                 this->enable_actuators();
                 //this->restart();
 
                 //this->unchuck_all();
+                this->unchuck();
 
                 clear_flags();
-                this->_status = CRControllerStatus::motion_cplt;
+                this->_status = ControllerStatus::motion_cplt;
 
                 this->currentCommandIndex++;
                 ROS_INFO("starting.");
@@ -758,62 +922,68 @@ void CrMain::control_timer_callback(const ros::TimerEvent& event)
 
             this->_next_pressed = false;
             //clear_flags();
-            this->_status = CRControllerStatus::standby;
+            this->_status = ControllerStatus::standby;
 
             //this->sense();
             ROS_INFO("standing by.");
         }
     }
-    else if (currentCommand == CRControllerCommands::move_to_pp1)
-    {
-        if (this->_status == CRControllerStatus::moving)
-        {
-            /*
-             if (this->_next_pressed)
-             {
-             clear_flags();
-             this->_next_pressed = true;
-             this->_status = CRControllerStatus::pp_pickingup;
-
-             this->currentCommandIndex++;
-             ROS_INFO("goal reached : pp1 (operator input)");
-             //ROS_INFO("picked up shuttles.");
-             }
-             else
-             */
-            if (this->_abort_pressed || this->_goal_reached)
-            {
-                clear_flags();
-                this->_status = CRControllerStatus::motion_cplt;
-
-                this->currentCommandIndex++;
-                ROS_INFO("goal reached : pp1");
-            }
-        }
-        else
-        {
-            this->publish_path_to(Coordinates::GetInstance()->get_cr_pp1(),
-                    Coordinates::GetInstance()->get_cr_pp1_wp1(), Coordinates::GetInstance()->get_cr_pp1_wp2());
-
-            clear_flags();
-            this->_status = CRControllerStatus::moving;
-
-            // ???
-            this->unchuck();
-        }
-    }
-    else if (currentCommand == CRControllerCommands::move_to_pp2)
+    else if (currentCommand == ControllerCommands::move_to_pp1)
     {
         static bool _wp = true;
 
-        if (this->_status == CRControllerStatus::moving)
+        if (this->_status == ControllerStatus::moving)
         {
             if (this->_abort_pressed || this->_goal_reached)
             {
                 if (_wp)
                 {
                     clear_flags();
-                    this->_status = CRControllerStatus::motion_cplt;
+                    this->_status = ControllerStatus::motion_cplt;
+
+                    //this->currentCommandIndex++;
+                    ROS_INFO("goal reached : pp1_wp");
+                    _wp = false;
+                }
+                else
+                {
+                    clear_flags();
+                    this->_status = ControllerStatus::motion_cplt;
+
+                    this->currentCommandIndex++;
+                    ROS_INFO("goal reached : pp1");
+                    _wp = true;
+                }
+            }
+        }
+        else
+        {
+            if (_wp)
+            {
+                this->publish_path_to(Coordinates::GetInstance()->get_cr_pp1_wp2());
+            }
+            else
+            {
+                this->publish_path_to(Coordinates::GetInstance()->get_cr_pp1(),
+                        Coordinates::GetInstance()->get_cr_pp1_wp1(), Coordinates::GetInstance()->get_cr_pp1_wp2());
+            }
+
+            clear_flags();
+            this->_status = ControllerStatus::moving;
+        }
+    }
+    else if (currentCommand == ControllerCommands::move_to_pp2)
+    {
+        static bool _wp = true;
+
+        if (this->_status == ControllerStatus::moving)
+        {
+            if (this->_abort_pressed || this->_goal_reached)
+            {
+                if (_wp)
+                {
+                    clear_flags();
+                    this->_status = ControllerStatus::motion_cplt;
 
                     //this->currentCommandIndex++;
                     ROS_INFO("goal reached : pp2_wp");
@@ -822,7 +992,7 @@ void CrMain::control_timer_callback(const ros::TimerEvent& event)
                 else
                 {
                     clear_flags();
-                    this->_status = CRControllerStatus::motion_cplt;
+                    this->_status = ControllerStatus::motion_cplt;
 
                     this->currentCommandIndex++;
                     ROS_INFO("goal reached : pp2");
@@ -843,21 +1013,21 @@ void CrMain::control_timer_callback(const ros::TimerEvent& event)
             }
 
             clear_flags();
-            this->_status = CRControllerStatus::moving;
+            this->_status = ControllerStatus::moving;
         }
     }
-    else if (currentCommand == CRControllerCommands::move_to_pp3)
+    else if (currentCommand == ControllerCommands::move_to_pp3)
     {
         static bool _wp = true;
 
-        if (this->_status == CRControllerStatus::moving)
+        if (this->_status == ControllerStatus::moving)
         {
             if (this->_abort_pressed || this->_goal_reached)
             {
                 if (_wp)
                 {
                     clear_flags();
-                    this->_status = CRControllerStatus::motion_cplt;
+                    this->_status = ControllerStatus::motion_cplt;
 
                     //this->currentCommandIndex++;
                     ROS_INFO("goal reached : pp3_wp");
@@ -866,7 +1036,7 @@ void CrMain::control_timer_callback(const ros::TimerEvent& event)
                 else
                 {
                     clear_flags();
-                    this->_status = CRControllerStatus::motion_cplt;
+                    this->_status = ControllerStatus::motion_cplt;
 
                     this->currentCommandIndex++;
                     ROS_INFO("goal reached : pp3");
@@ -887,21 +1057,21 @@ void CrMain::control_timer_callback(const ros::TimerEvent& event)
             }
 
             clear_flags();
-            this->_status = CRControllerStatus::moving;
+            this->_status = ControllerStatus::moving;
         }
     }
-    else if (currentCommand == CRControllerCommands::move_to_pp4)
+    else if (currentCommand == ControllerCommands::move_to_pp4)
     {
         static bool _wp = true;
 
-        if (this->_status == CRControllerStatus::moving)
+        if (this->_status == ControllerStatus::moving)
         {
             if (this->_abort_pressed || this->_goal_reached)
             {
                 if (_wp)
                 {
                     clear_flags();
-                    this->_status = CRControllerStatus::motion_cplt;
+                    this->_status = ControllerStatus::motion_cplt;
 
                     //this->currentCommandIndex++;
                     ROS_INFO("goal reached : pp4_wp");
@@ -910,7 +1080,7 @@ void CrMain::control_timer_callback(const ros::TimerEvent& event)
                 else
                 {
                     clear_flags();
-                    this->_status = CRControllerStatus::motion_cplt;
+                    this->_status = ControllerStatus::motion_cplt;
 
                     this->currentCommandIndex++;
                     ROS_INFO("goal reached : pp4");
@@ -931,21 +1101,21 @@ void CrMain::control_timer_callback(const ros::TimerEvent& event)
             }
 
             clear_flags();
-            this->_status = CRControllerStatus::moving;
+            this->_status = ControllerStatus::moving;
         }
     }
-    else if (currentCommand == CRControllerCommands::move_to_dp1)
+    else if (currentCommand == ControllerCommands::move_to_dp1)
     {
         static bool _wp = true;
 
-        if (this->_status == CRControllerStatus::moving)
+        if (this->_status == ControllerStatus::moving)
         {
             if (this->_abort_pressed || this->_goal_reached)
             {
                 if (_wp)
                 {
                     clear_flags();
-                    this->_status = CRControllerStatus::motion_cplt;
+                    this->_status = ControllerStatus::motion_cplt;
 
                     //this->currentCommandIndex++;
                     ROS_INFO("goal reached : dp1_wp");
@@ -954,7 +1124,7 @@ void CrMain::control_timer_callback(const ros::TimerEvent& event)
                 else
                 {
                     clear_flags();
-                    this->_status = CRControllerStatus::motion_cplt;
+                    this->_status = ControllerStatus::motion_cplt;
 
                     this->currentCommandIndex++;
                     ROS_INFO("goal reached : dp1");
@@ -975,21 +1145,21 @@ void CrMain::control_timer_callback(const ros::TimerEvent& event)
             }
 
             clear_flags();
-            this->_status = CRControllerStatus::moving;
+            this->_status = ControllerStatus::moving;
         }
     }
-    else if (currentCommand == CRControllerCommands::move_to_dp2)
+    else if (currentCommand == ControllerCommands::move_to_dp2)
     {
         static bool _wp = true;
 
-        if (this->_status == CRControllerStatus::moving)
+        if (this->_status == ControllerStatus::moving)
         {
             if (this->_abort_pressed || this->_goal_reached)
             {
                 if (_wp)
                 {
                     clear_flags();
-                    this->_status = CRControllerStatus::motion_cplt;
+                    this->_status = ControllerStatus::motion_cplt;
 
                     //this->currentCommandIndex++;
                     ROS_INFO("goal reached : dp2_wp");
@@ -998,7 +1168,7 @@ void CrMain::control_timer_callback(const ros::TimerEvent& event)
                 else
                 {
                     clear_flags();
-                    this->_status = CRControllerStatus::motion_cplt;
+                    this->_status = ControllerStatus::motion_cplt;
 
                     this->currentCommandIndex++;
                     ROS_INFO("goal reached : dp2");
@@ -1019,21 +1189,21 @@ void CrMain::control_timer_callback(const ros::TimerEvent& event)
             }
 
             clear_flags();
-            this->_status = CRControllerStatus::moving;
+            this->_status = ControllerStatus::moving;
         }
     }
-    else if (currentCommand == CRControllerCommands::move_to_dp3)
+    else if (currentCommand == ControllerCommands::move_to_dp3)
     {
         static bool _wp = true;
 
-        if (this->_status == CRControllerStatus::moving)
+        if (this->_status == ControllerStatus::moving)
         {
             if (this->_abort_pressed || this->_goal_reached)
             {
                 if (_wp)
                 {
                     clear_flags();
-                    this->_status = CRControllerStatus::motion_cplt;
+                    this->_status = ControllerStatus::motion_cplt;
 
                     //this->currentCommandIndex++;
                     ROS_INFO("goal reached : dp3_wp");
@@ -1042,7 +1212,7 @@ void CrMain::control_timer_callback(const ros::TimerEvent& event)
                 else
                 {
                     clear_flags();
-                    this->_status = CRControllerStatus::motion_cplt;
+                    this->_status = ControllerStatus::motion_cplt;
 
                     this->currentCommandIndex++;
                     ROS_INFO("goal reached : dp3");
@@ -1063,21 +1233,21 @@ void CrMain::control_timer_callback(const ros::TimerEvent& event)
             }
 
             clear_flags();
-            this->_status = CRControllerStatus::moving;
+            this->_status = ControllerStatus::moving;
         }
     }
-    else if (currentCommand == CRControllerCommands::move_to_dp4)
+    else if (currentCommand == ControllerCommands::move_to_dp4)
     {
         static bool _wp = true;
 
-        if (this->_status == CRControllerStatus::moving)
+        if (this->_status == ControllerStatus::moving)
         {
             if (this->_abort_pressed || this->_goal_reached)
             {
                 if (_wp)
                 {
                     clear_flags();
-                    this->_status = CRControllerStatus::motion_cplt;
+                    this->_status = ControllerStatus::motion_cplt;
 
                     //this->currentCommandIndex++;
                     ROS_INFO("goal reached : dp4_wp");
@@ -1086,7 +1256,7 @@ void CrMain::control_timer_callback(const ros::TimerEvent& event)
                 else
                 {
                     clear_flags();
-                    this->_status = CRControllerStatus::motion_cplt;
+                    this->_status = ControllerStatus::motion_cplt;
 
                     this->currentCommandIndex++;
                     ROS_INFO("goal reached : dp4");
@@ -1107,17 +1277,17 @@ void CrMain::control_timer_callback(const ros::TimerEvent& event)
             }
 
             clear_flags();
-            this->_status = CRControllerStatus::moving;
+            this->_status = ControllerStatus::moving;
         }
     }
-    else if (currentCommand == CRControllerCommands::rtb)
+    else if (currentCommand == ControllerCommands::rtb)
     {
-        if (this->_status == CRControllerStatus::moving)
+        if (this->_status == ControllerStatus::moving)
         {
             if (this->_abort_pressed || this->_goal_reached)
             {
                 clear_flags();
-                this->_status = CRControllerStatus::motion_cplt;
+                this->_status = ControllerStatus::motion_cplt;
 
                 this->currentCommandIndex++;
                 ROS_INFO("goal reached : sz");
@@ -1128,15 +1298,15 @@ void CrMain::control_timer_callback(const ros::TimerEvent& event)
             this->publish_path_to(Coordinates::GetInstance()->get_cr_sz());
 
             clear_flags();
-            this->_status = CRControllerStatus::moving;
+            this->_status = ControllerStatus::moving;
         }
     }
-    else if (currentCommand == CRControllerCommands::pp_pickup)
+    else if (currentCommand == ControllerCommands::pp_pickup)
     {
-        if (this->_status == CRControllerStatus::pp_pickingup)
+        if (this->_status == ControllerStatus::pp_pickingup)
         {
             // TODO: this is INSANE
-            if (this->_next_pressed)// || true)
+            if (this->_next_pressed)    // || true)
             {
                 clear_flags();
 
@@ -1146,19 +1316,19 @@ void CrMain::control_timer_callback(const ros::TimerEvent& event)
                 // move y +0.4
                 this->publish_path_to_relative(0.000, 0.300);
 
-                this->_status = CRControllerStatus::moving;
+                this->_status = ControllerStatus::moving;
 
                 // do not increment the command index
 
                 ROS_INFO("picked up workpieces and backing up now.");
             }
         }
-        else if (this->_status == CRControllerStatus::moving)
+        else if (this->_status == ControllerStatus::moving)
         {
             if (this->_goal_reached)
             {
                 clear_flags();
-                this->_status = CRControllerStatus::motion_cplt;
+                this->_status = ControllerStatus::motion_cplt;
 
                 this->currentCommandIndex++;
                 ROS_INFO("goal reached : ppx_wpy");
@@ -1168,13 +1338,13 @@ void CrMain::control_timer_callback(const ros::TimerEvent& event)
         {
             clear_flags();
             this->_is_manual_enabled = true;
-            this->_status = CRControllerStatus::pp_pickingup;
+            this->_status = ControllerStatus::pp_pickingup;
         }
         this->amt();
     }
-    else if (currentCommand == CRControllerCommands::dp_deliver)
+    else if (currentCommand == ControllerCommands::dp_deliver)
     {
-        if (this->_status == CRControllerStatus::dp_delivering)
+        if (this->_status == ControllerStatus::dp_delivering)
         {
             if (this->_next_pressed)
             {
@@ -1185,19 +1355,19 @@ void CrMain::control_timer_callback(const ros::TimerEvent& event)
                 // move y -0.4
                 this->publish_path_to_relative(0.000, -0.300);
 
-                this->_status = CRControllerStatus::moving;
+                this->_status = ControllerStatus::moving;
 
                 // do not increment the command index
 
                 ROS_INFO("delivered a workpiece and backing up now.");
             }
         }
-        else if (this->_status == CRControllerStatus::moving)
+        else if (this->_status == ControllerStatus::moving)
         {
             if (this->_goal_reached)
             {
                 clear_flags();
-                this->_status = CRControllerStatus::motion_cplt;
+                this->_status = ControllerStatus::motion_cplt;
 
                 this->currentCommandIndex++;
                 ROS_INFO("goal reached : dpx_wpy");
@@ -1207,49 +1377,49 @@ void CrMain::control_timer_callback(const ros::TimerEvent& event)
         {
             clear_flags();
             this->_is_manual_enabled = true;
-            this->_status = CRControllerStatus::dp_delivering;
+            this->_status = ControllerStatus::dp_delivering;
         }
         this->amt();
     }
-    else if (currentCommand == CRControllerCommands::set_lift_p)
+    else if (currentCommand == ControllerCommands::set_lift_p)
     {
         clear_flags();
 
         move_lift(0);
 
-        this->_status = CRControllerStatus::motion_cplt;
+        this->_status = ControllerStatus::motion_cplt;
 
         this->currentCommandIndex++;
     }
-    else if (currentCommand == CRControllerCommands::set_lift_1)
+    else if (currentCommand == ControllerCommands::set_lift_1)
     {
         clear_flags();
 
         move_lift(1);
 
-        this->_status = CRControllerStatus::motion_cplt;
+        this->_status = ControllerStatus::motion_cplt;
 
         this->currentCommandIndex++;
     }
-    else if (currentCommand == CRControllerCommands::set_lift_2)
+    else if (currentCommand == ControllerCommands::set_lift_2)
     {
         clear_flags();
         move_lift(2);
-        this->_status = CRControllerStatus::motion_cplt;
+        this->_status = ControllerStatus::motion_cplt;
         this->currentCommandIndex++;
         ROS_INFO("lift position set: 2");
     }
-    else if (currentCommand == CRControllerCommands::set_lift_3)
+    else if (currentCommand == ControllerCommands::set_lift_3)
     {
         clear_flags();
 
         move_lift(3);
 
-        this->_status = CRControllerStatus::motion_cplt;
+        this->_status = ControllerStatus::motion_cplt;
 
         this->currentCommandIndex++;
     }
-    else if (currentCommand == CRControllerCommands::delay)
+    else if (currentCommand == ControllerCommands::delay)
     {
         if (this->_delay_s == 0)
         {
@@ -1262,13 +1432,13 @@ void CrMain::control_timer_callback(const ros::TimerEvent& event)
             this->currentCommandIndex++;
         }
     }
-    else if (currentCommand == CRControllerCommands::segno)
+    else if (currentCommand == ControllerCommands::segno)
     {
         this->currentCommandIndex++;
     }
-    else if (currentCommand == CRControllerCommands::dal_segno)
+    else if (currentCommand == ControllerCommands::dal_segno)
     {
-        auto segno_iter = std::find(this->command_list.begin(), this->command_list.end(), CRControllerCommands::segno);
+        auto segno_iter = std::find(this->command_list.begin(), this->command_list.end(), ControllerCommands::segno);
         if (segno_iter == this->command_list.end())
         {
             // abort on error
