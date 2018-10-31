@@ -381,6 +381,10 @@ CrMain::CrMain(void)
 
     command_list.reserve(64);
 
+    std::copy(CrMain::route1_op_commands.begin(), CrMain::route1_op_commands.end(), this->command_list.begin() + 1);
+    this->command_list[0] = ControllerCommands::standby;
+    ROS_INFO("operation mode set to route1_pp1_op.");
+
     this->_status = ControllerStatus::shutdown;
 
     // timer starts immediately
@@ -498,80 +502,80 @@ void CrMain::baseConfCallback(const std_msgs::UInt8::ConstPtr& msg)
 
         switch (this->_op_mode)
         {
-        case OpMode::route1_pp1_op:
-            index = std::distance(CrMain::route1_op_commands.begin(),
-                    std::find(CrMain::route1_op_commands.begin(), CrMain::route1_op_commands.end(),
-                            ControllerCommands::checkpoint_pp1));
-            std::copy(CrMain::route1_op_commands.begin() + index, CrMain::route1_op_commands.end(),
-                    this->command_list.begin() + 1);
-            ROS_INFO("operation mode set to route1_pp1_op.");
-            break;
+            case OpMode::route1_pp1_op:
+                index = std::distance(CrMain::route1_op_commands.begin(),
+                        std::find(CrMain::route1_op_commands.begin(), CrMain::route1_op_commands.end(),
+                                ControllerCommands::checkpoint_pp1));
+                std::copy(CrMain::route1_op_commands.begin() + index, CrMain::route1_op_commands.end(),
+                        this->command_list.begin() + 1);
+                ROS_INFO("operation mode set to route1_pp1_op.");
+                break;
 
-        case OpMode::route1_pp2_op:
-            index = std::distance(CrMain::route1_op_commands.begin(),
-                    std::find(CrMain::route1_op_commands.begin(), CrMain::route1_op_commands.end(),
-                            ControllerCommands::checkpoint_pp2));
-            std::copy(CrMain::route1_op_commands.begin() + index, CrMain::route1_op_commands.end(),
-                    this->command_list.begin() + 1);
-            ROS_INFO("operation mode set to route1_pp2_op.");
-            break;
+            case OpMode::route1_pp2_op:
+                index = std::distance(CrMain::route1_op_commands.begin(),
+                        std::find(CrMain::route1_op_commands.begin(), CrMain::route1_op_commands.end(),
+                                ControllerCommands::checkpoint_pp2));
+                std::copy(CrMain::route1_op_commands.begin() + index, CrMain::route1_op_commands.end(),
+                        this->command_list.begin() + 1);
+                ROS_INFO("operation mode set to route1_pp2_op.");
+                break;
 
-        case OpMode::route1_pp3_op:
-            index = std::distance(CrMain::route1_op_commands.begin(),
-                    std::find(CrMain::route1_op_commands.begin(), CrMain::route1_op_commands.end(),
-                            ControllerCommands::checkpoint_pp3));
-            std::copy(CrMain::route1_op_commands.begin() + index, CrMain::route1_op_commands.end(),
-                    this->command_list.begin() + 1);
-            ROS_INFO("operation mode set to route1_pp3_op.");
-            break;
+            case OpMode::route1_pp3_op:
+                index = std::distance(CrMain::route1_op_commands.begin(),
+                        std::find(CrMain::route1_op_commands.begin(), CrMain::route1_op_commands.end(),
+                                ControllerCommands::checkpoint_pp3));
+                std::copy(CrMain::route1_op_commands.begin() + index, CrMain::route1_op_commands.end(),
+                        this->command_list.begin() + 1);
+                ROS_INFO("operation mode set to route1_pp3_op.");
+                break;
 
-        case OpMode::route1_pp4_op:
-            index = std::distance(CrMain::route1_op_commands.begin(),
-                    std::find(CrMain::route1_op_commands.begin(), CrMain::route1_op_commands.end(),
-                            ControllerCommands::checkpoint_pp4));
-            std::copy(CrMain::route1_op_commands.begin() + index, CrMain::route1_op_commands.end(),
-                    this->command_list.begin() + 1);
-            ROS_INFO("operation mode set to route1_pp4_op.");
-            break;
+            case OpMode::route1_pp4_op:
+                index = std::distance(CrMain::route1_op_commands.begin(),
+                        std::find(CrMain::route1_op_commands.begin(), CrMain::route1_op_commands.end(),
+                                ControllerCommands::checkpoint_pp4));
+                std::copy(CrMain::route1_op_commands.begin() + index, CrMain::route1_op_commands.end(),
+                        this->command_list.begin() + 1);
+                ROS_INFO("operation mode set to route1_pp4_op.");
+                break;
 
-        case OpMode::route2_pp1_op:
-            index = std::distance(CrMain::route2_op_commands.begin(),
-                    std::find(CrMain::route2_op_commands.begin(), CrMain::route2_op_commands.end(),
-                            ControllerCommands::checkpoint_pp1));
-            std::copy(CrMain::route2_op_commands.begin() + index, CrMain::route2_op_commands.end(),
-                    this->command_list.begin() + 1);
-            ROS_INFO("operation mode set to route2_pp1_op.");
-            break;
+            case OpMode::route2_pp1_op:
+                index = std::distance(CrMain::route2_op_commands.begin(),
+                        std::find(CrMain::route2_op_commands.begin(), CrMain::route2_op_commands.end(),
+                                ControllerCommands::checkpoint_pp1));
+                std::copy(CrMain::route2_op_commands.begin() + index, CrMain::route2_op_commands.end(),
+                        this->command_list.begin() + 1);
+                ROS_INFO("operation mode set to route2_pp1_op.");
+                break;
 
-        case OpMode::route2_pp2_op:
-            index = std::distance(CrMain::route2_op_commands.begin(),
-                    std::find(CrMain::route2_op_commands.begin(), CrMain::route2_op_commands.end(),
-                            ControllerCommands::checkpoint_pp2));
-            std::copy(CrMain::route2_op_commands.begin() + index, CrMain::route2_op_commands.end(),
-                    this->command_list.begin() + 1);
-            ROS_INFO("operation mode set to route2_pp2_op.");
-            break;
+            case OpMode::route2_pp2_op:
+                index = std::distance(CrMain::route2_op_commands.begin(),
+                        std::find(CrMain::route2_op_commands.begin(), CrMain::route2_op_commands.end(),
+                                ControllerCommands::checkpoint_pp2));
+                std::copy(CrMain::route2_op_commands.begin() + index, CrMain::route2_op_commands.end(),
+                        this->command_list.begin() + 1);
+                ROS_INFO("operation mode set to route2_pp2_op.");
+                break;
 
-        case OpMode::route2_pp3_op:
-            index = std::distance(CrMain::route2_op_commands.begin(),
-                    std::find(CrMain::route2_op_commands.begin(), CrMain::route2_op_commands.end(),
-                            ControllerCommands::checkpoint_pp3));
-            std::copy(CrMain::route2_op_commands.begin() + index, CrMain::route2_op_commands.end(),
-                    this->command_list.begin() + 1);
-            ROS_INFO("operation mode set to route2_pp3_op.");
-            break;
+            case OpMode::route2_pp3_op:
+                index = std::distance(CrMain::route2_op_commands.begin(),
+                        std::find(CrMain::route2_op_commands.begin(), CrMain::route2_op_commands.end(),
+                                ControllerCommands::checkpoint_pp3));
+                std::copy(CrMain::route2_op_commands.begin() + index, CrMain::route2_op_commands.end(),
+                        this->command_list.begin() + 1);
+                ROS_INFO("operation mode set to route2_pp3_op.");
+                break;
 
-        case OpMode::route2_pp4_op:
-            index = std::distance(CrMain::route2_op_commands.begin(),
-                    std::find(CrMain::route2_op_commands.begin(), CrMain::route2_op_commands.end(),
-                            ControllerCommands::checkpoint_pp4));
-            std::copy(CrMain::route2_op_commands.begin() + index, CrMain::route2_op_commands.end(),
-                    this->command_list.begin() + 1);
-            ROS_INFO("operation mode set to route2_pp4_op.");
-            break;
+            case OpMode::route2_pp4_op:
+                index = std::distance(CrMain::route2_op_commands.begin(),
+                        std::find(CrMain::route2_op_commands.begin(), CrMain::route2_op_commands.end(),
+                                ControllerCommands::checkpoint_pp4));
+                std::copy(CrMain::route2_op_commands.begin() + index, CrMain::route2_op_commands.end(),
+                        this->command_list.begin() + 1);
+                ROS_INFO("operation mode set to route2_pp4_op.");
+                break;
 
-        default:
-            break;
+            default:
+                break;
         }
 
         this->command_list[0] = ControllerCommands::standby;
