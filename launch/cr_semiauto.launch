@@ -68,7 +68,7 @@
     </node>
 
     <!-- base itself -->
-    <node pkg="rosserial_server" type="serial_node" name="base">
+    <node pkg="rosserial_server" type="serial_node" name="base" output="screen">
         <rosparam>
             port: /dev/ttyUSB0
             baud: 921600
