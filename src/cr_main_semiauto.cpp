@@ -311,7 +311,7 @@ CrMain::CrMain(void)
     nh_.getParam("AxisRightThumbX", AxisRightThumbX);
 
     //command_list.reserve(64);
-    command_list = &CrMain::route1_pp1_op_commands;
+    command_list = &CrMain::route2_pp1_op_commands;
     ROS_INFO("operation mode set to route1_pp1_op. command size: %ld", this->command_list->size());
 
     this->_status = ControllerStatus::shutdown;
