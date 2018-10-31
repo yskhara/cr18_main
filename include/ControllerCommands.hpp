@@ -97,7 +97,7 @@ const std::vector<ControllerCommands> CrMain::route1_pp4_op_commands( {
 
         ControllerCommands::shutdown, });
 
-const std::vector<ControllerCommands> CrMain::route2_op_commands( {
+const std::vector<ControllerCommands> CrMain::route2_pp1_op_commands( {
 //standby at sz
         ControllerCommands::standby,
 
@@ -115,6 +115,66 @@ const std::vector<ControllerCommands> CrMain::route2_op_commands( {
         ControllerCommands::set_lift_p, ControllerCommands::move_to_pp3, ControllerCommands::pp_pickup,
         // deliver at dp3 @ 2nd floor
         ControllerCommands::set_lift_2, ControllerCommands::move_to_dp3, ControllerCommands::dp_deliver,
+
+        // pickup at pp4
+        ControllerCommands::set_lift_p, ControllerCommands::move_to_pp4, ControllerCommands::pp_pickup,
+
+        // deliver at dp4 @ 2nd floor
+        ControllerCommands::set_lift_2, ControllerCommands::move_to_dp4, ControllerCommands::dp_deliver,
+
+        // return to base
+        ControllerCommands::set_lift_p, ControllerCommands::rtb,
+
+        ControllerCommands::shutdown, });
+
+const std::vector<ControllerCommands> CrMain::route2_pp2_op_commands( {
+//standby at sz
+        ControllerCommands::standby,
+
+        // pickup at pp2
+        ControllerCommands::set_lift_p, ControllerCommands::move_to_pp2, ControllerCommands::pp_pickup,
+        // deliver at dp2 @ 2nd floor
+        ControllerCommands::set_lift_2, ControllerCommands::move_to_dp2, ControllerCommands::dp_deliver,
+
+        // pickup at pp3
+        ControllerCommands::set_lift_p, ControllerCommands::move_to_pp3, ControllerCommands::pp_pickup,
+        // deliver at dp3 @ 2nd floor
+        ControllerCommands::set_lift_2, ControllerCommands::move_to_dp3, ControllerCommands::dp_deliver,
+
+        // pickup at pp4
+        ControllerCommands::set_lift_p, ControllerCommands::move_to_pp4, ControllerCommands::pp_pickup,
+
+        // deliver at dp4 @ 2nd floor
+        ControllerCommands::set_lift_2, ControllerCommands::move_to_dp4, ControllerCommands::dp_deliver,
+
+        // return to base
+        ControllerCommands::set_lift_p, ControllerCommands::rtb,
+
+        ControllerCommands::shutdown, });
+
+const std::vector<ControllerCommands> CrMain::route2_pp3_op_commands( {
+//standby at sz
+        ControllerCommands::standby,
+
+        // pickup at pp3
+        ControllerCommands::set_lift_p, ControllerCommands::move_to_pp3, ControllerCommands::pp_pickup,
+        // deliver at dp3 @ 2nd floor
+        ControllerCommands::set_lift_2, ControllerCommands::move_to_dp3, ControllerCommands::dp_deliver,
+
+        // pickup at pp4
+        ControllerCommands::set_lift_p, ControllerCommands::move_to_pp4, ControllerCommands::pp_pickup,
+
+        // deliver at dp4 @ 2nd floor
+        ControllerCommands::set_lift_2, ControllerCommands::move_to_dp4, ControllerCommands::dp_deliver,
+
+        // return to base
+        ControllerCommands::set_lift_p, ControllerCommands::rtb,
+
+        ControllerCommands::shutdown, });
+
+const std::vector<ControllerCommands> CrMain::route2_pp4_op_commands( {
+//standby at sz
+        ControllerCommands::standby,
 
         // pickup at pp4
         ControllerCommands::set_lift_p, ControllerCommands::move_to_pp4, ControllerCommands::pp_pickup,

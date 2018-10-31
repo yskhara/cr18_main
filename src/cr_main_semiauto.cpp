@@ -103,7 +103,7 @@ private:
 
     void shutdownInputCallback(const std_msgs::Bool::ConstPtr& msg);
     void startInputCallback(const std_msgs::Bool::ConstPtr& msg);
-    void baseConfCallback(const std_msgs::UInt8::ConstPtr& msg);
+    //void baseConfCallback(const std_msgs::UInt8::ConstPtr& msg);
 
     void joyCallback(const sensor_msgs::Joy::ConstPtr& joy);
 
@@ -155,7 +155,10 @@ private:
     static const std::vector<ControllerCommands> route1_pp2_op_commands;
     static const std::vector<ControllerCommands> route1_pp3_op_commands;
     static const std::vector<ControllerCommands> route1_pp4_op_commands;
-    static const std::vector<ControllerCommands> route2_op_commands;
+    static const std::vector<ControllerCommands> route2_pp1_op_commands;
+    static const std::vector<ControllerCommands> route2_pp2_op_commands;
+    static const std::vector<ControllerCommands> route2_pp3_op_commands;
+    static const std::vector<ControllerCommands> route2_pp4_op_commands;
     static const std::vector<ControllerCommands> default_commands;
 
     //std::vector<ControllerCommands> command_list;
@@ -311,7 +314,7 @@ CrMain::CrMain(void)
     nh_.getParam("AxisRightThumbX", AxisRightThumbX);
 
     //command_list.reserve(64);
-    command_list = &CrMain::route2_op_commands;
+    command_list = &CrMain::route1_pp1_op_commands;
     ROS_INFO("operation mode set to route1_pp1_op. command size: %ld", this->command_list->size());
 
     this->_status = ControllerStatus::shutdown;
@@ -429,69 +432,6 @@ void CrMain::startInputCallback(const std_msgs::Bool::ConstPtr& msg)
     }
 }
 
-void CrMain::baseConfCallback(const std_msgs::UInt8::ConstPtr& msg)
-{
-    if (this->currentCommandIndex != -1 && this->currentCommandIndex != 0)
-    {
-        return;
-    }
-
-    if (this->_op_mode != (OpMode) msg->data)
-    {
-        this->_op_mode = (OpMode) msg->data;
-
-        int index = 0;
-
-        switch (this->_op_mode)
-        {
-            case OpMode::route1_pp1_op:
-                command_list = &CrMain::route1_pp1_op_commands;
-                ROS_INFO("operation mode set to route1_pp1_op.");
-                break;
-
-            case OpMode::route1_pp2_op:
-                command_list = &CrMain::route1_pp2_op_commands;
-                ROS_INFO("operation mode set to route1_pp2_op.");
-                break;
-
-            case OpMode::route1_pp3_op:
-                command_list = &CrMain::route1_pp3_op_commands;
-                ROS_INFO("operation mode set to route1_pp3_op.");
-                break;
-
-            case OpMode::route1_pp4_op:
-                command_list = &CrMain::route1_pp4_op_commands;
-                ROS_INFO("operation mode set to route1_pp4_op.");
-                break;
-
-            case OpMode::route2_pp1_op:
-                command_list = &CrMain::route2_op_commands;
-                ROS_INFO("operation mode set to route2_op.");
-                break;
-
-            case OpMode::route2_pp2_op:
-                command_list = &CrMain::route2_op_commands;
-                ROS_INFO("operation mode set to route2_op.");
-                break;
-
-            case OpMode::route2_pp3_op:
-                command_list = &CrMain::route2_op_commands;
-                ROS_INFO("operation mode set to route2_op.");
-                break;
-
-            case OpMode::route2_pp4_op:
-                command_list = &CrMain::route2_op_commands;
-                ROS_INFO("operation mode set to route2_op.");
-                break;
-
-            default:
-                break;
-        }
-
-        //this->command_list[0] = ControllerCommands::standby;
-    }
-}
-
 void CrMain::goalReachedCallback(const std_msgs::Bool::ConstPtr& msg)
 {
     if (!msg->data)
@@ -514,7 +454,6 @@ void CrMain::joyCallback(const sensor_msgs::Joy::ConstPtr& joy)
     static bool last_b = false;
     static bool last_x = false;
     static bool last_y = false;
-    static int last_dpadX = 0;
 
     bool _a = joy->buttons[ButtonA];
     bool _b = joy->buttons[ButtonB];
@@ -546,21 +485,67 @@ void CrMain::joyCallback(const sensor_msgs::Joy::ConstPtr& joy)
 
     }
 
-    int dpadX = -joy->axes[AxisDPadX];
-    if (dpadX != last_dpadX)
+    if(this->_status == ControllerStatus::shutdown)
     {
-        if (0 < dpadX)
+        bool rb = joy->buttons[ButtonRB];
+        bool lb = joy->buttons[ButtonLB];
+        int dx = joy->axes[AxisDPadX];
+        int dy = joy->axes[AxisDPadY];
+
+        if(lb && !rb)
         {
-            if (this->_is_manual_enabled)
+            // route 1
+            if(dx == 0 && dy > 0)
             {
-                this->_target_yaw = 0.0;
+                // from pp1
+                command_list = &CrMain::route1_pp1_op_commands;
+                ROS_INFO("operation mode set to route1_pp1_op. command size: %ld", this->command_list->size());
+            }
+            else if(dx > 0 && dy == 0)
+            {
+                // from pp2
+                command_list = &CrMain::route1_pp2_op_commands;
+                ROS_INFO("operation mode set to route1_pp2_op. command size: %ld", this->command_list->size());
+            }
+            else if(dx == 0 && dy < 0)
+            {
+                // from pp3
+                command_list = &CrMain::route1_pp3_op_commands;
+                ROS_INFO("operation mode set to route1_pp3_op. command size: %ld", this->command_list->size());
+            }
+            else if(dx < 0 && dy == 0)
+            {
+                // from pp4
+                command_list = &CrMain::route1_pp4_op_commands;
+                ROS_INFO("operation mode set to route1_pp4_op. command size: %ld", this->command_list->size());
             }
         }
-        else if (dpadX < 0)
+        else if(rb && !lb)
         {
-            if (this->_is_manual_enabled)
+            // route 2
+            if(dx == 0 && dy > 0)
             {
-                this->_target_yaw = M_PI / 2.0;
+                // from pp1
+                command_list = &CrMain::route2_pp1_op_commands;
+                ROS_INFO("operation mode set to route2_pp1_op. command size: %ld", this->command_list->size());
+            }
+            else if(dx > 0 && dy == 0)
+            {
+                // from pp2
+                command_list = &CrMain::route2_pp2_op_commands;
+                ROS_INFO("operation mode set to route2_pp2_op. command size: %ld", this->command_list->size());
+            }
+            else if(dx == 0 && dy < 0)
+            {
+                // from pp3
+                command_list = &CrMain::route2_pp3_op_commands;
+                ROS_INFO("operation mode set to route2_pp3_op. command size: %ld", this->command_list->size());
+            }
+            else if(dx < 0 && dy == 0)
+            {
+                // from pp4
+                command_list = &CrMain::route2_pp4_op_commands;
+                ROS_INFO("operation mode set to route2_pp4_op. command size: %ld", this->command_list->size());
             }
         }
     }
@@ -575,7 +560,7 @@ void CrMain::joyCallback(const sensor_msgs::Joy::ConstPtr& joy)
         //swap x and y
         this->_target_x = joy->axes[AxisLeftThumbY];
         this->_target_y = joy->axes[AxisLeftThumbX];
-        this->_rush = (joy->buttons[ButtonRB] != 0);
+        this->_rush = false;//(joy->buttons[ButtonRB] != 0);
     }
     else
     {
