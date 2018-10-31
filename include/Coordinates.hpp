@@ -14,7 +14,7 @@
 
 class Coordinates
 {
-private:
+protected:
 	geometry_msgs::Pose _cr_sz;
 
     geometry_msgs::Pose _cr_pp1;
@@ -182,141 +182,7 @@ const Coordinates *Coordinates::instance = new Coordinates();
 
 Coordinates::Coordinates(void)
 {
-	/*
-	 * Field Coordinates for Carrying Robot (CR)
-	 *
-	 * Start Zone
-	 */
-	this->_cr_sz.position.x = 0.330;
-	this->_cr_sz.position.y = 1.100;
-	this->_cr_sz.position.z = 0.000;
-	this->_cr_sz.orientation = tf::createQuaternionMsgFromYaw(-M_PI/2);
 
-    geometry_msgs::Quaternion pp_orientation = tf::createQuaternionMsgFromYaw(-M_PI/2);
-    geometry_msgs::Quaternion dp_orientation = tf::createQuaternionMsgFromYaw(M_PI/2);
-
-    /*
-     * Pickup Point 1
-     */
-    this->_cr_pp1.position.x        = 0.495;
-    this->_cr_pp1.position.y        = 0.350;
-    this->_cr_pp1.orientation       = pp_orientation;
-
-    this->_cr_pp1_wp1.position.x    = this->_cr_pp1.position.x;
-    this->_cr_pp1_wp1.position.y    = 0.700;
-    this->_cr_pp1_wp1.orientation   = pp_orientation;
-
-    this->_cr_pp1_wp2.position.x    = this->_cr_pp1.position.x;
-    this->_cr_pp1_wp2.position.y    = 0.700;
-    //this->_cr_pp1_wp2.position.y    = 0.900;
-    this->_cr_pp1_wp2.orientation   = pp_orientation;
-
-
-    /*
-     * Pickup Point 2
-     */
-    this->_cr_pp2.position.x        = 0.825;
-    this->_cr_pp2.position.y        = this->_cr_pp1.position.y;
-    this->_cr_pp2.orientation       = pp_orientation;
-
-    this->_cr_pp2_wp1.position.x    = this->_cr_pp2.position.x;
-    this->_cr_pp2_wp1.position.y    = this->_cr_pp1_wp1.position.y;
-    this->_cr_pp2_wp1.orientation   = pp_orientation;
-
-    this->_cr_pp2_wp2.position.x    = this->_cr_pp2.position.x;
-    this->_cr_pp2_wp2.position.y    = this->_cr_pp1_wp2.position.y;
-    this->_cr_pp2_wp2.orientation   = pp_orientation;
-
-    /*
-     * Pickup Point 3
-     */
-    this->_cr_pp3.position.x        = 1.155;
-    this->_cr_pp3.position.y        = this->_cr_pp1.position.y;
-    this->_cr_pp3.orientation       = pp_orientation;
-
-    this->_cr_pp3_wp1.position.x    = this->_cr_pp3.position.x;
-    this->_cr_pp3_wp1.position.y    = this->_cr_pp1_wp1.position.y;
-    this->_cr_pp3_wp1.orientation   = pp_orientation;
-
-    this->_cr_pp3_wp2.position.x    = this->_cr_pp3.position.x;
-    this->_cr_pp3_wp2.position.y    = this->_cr_pp1_wp2.position.y;
-    this->_cr_pp3_wp2.orientation   = pp_orientation;
-
-    /*
-     * Pickup Point 4
-     */
-    this->_cr_pp4.position.x        = 1.485;
-    this->_cr_pp4.position.y        = this->_cr_pp1.position.y;
-    this->_cr_pp4.orientation       = pp_orientation;
-
-    this->_cr_pp4_wp1.position.x    = this->_cr_pp4.position.x;
-    this->_cr_pp4_wp1.position.y    = this->_cr_pp1_wp1.position.y;
-    this->_cr_pp4_wp1.orientation   = pp_orientation;
-
-    this->_cr_pp4_wp2.position.x    = this->_cr_pp4.position.x;
-    this->_cr_pp4_wp2.position.y    = this->_cr_pp1_wp2.position.y;
-    this->_cr_pp4_wp2.orientation   = pp_orientation;
-
-    /*
-     * Delivery Point 1
-     */
-    this->_cr_dp1.position.x        = 0.938;
-    this->_cr_dp1.position.y        = 2.150;
-    this->_cr_dp1.orientation       = dp_orientation;
-
-    this->_cr_dp1_wp1.position.x    = this->_cr_dp1.position.x;
-    this->_cr_dp1_wp1.position.y    = 1.900;
-    this->_cr_dp1_wp1.orientation   = dp_orientation;
-
-    this->_cr_dp1_wp2.position.x    = this->_cr_dp1.position.x;
-    this->_cr_dp1_wp2.position.y    = 1.900;
-    //this->_cr_dp1_wp2.position.y    = 1.700;
-    this->_cr_dp1_wp2.orientation   = dp_orientation;
-
-    /*
-     * Delivery Point 2
-     */
-    this->_cr_dp2.position.x        = 1.176;
-    this->_cr_dp2.position.y        = this->_cr_dp1.position.y;
-    this->_cr_dp2.orientation       = dp_orientation;
-
-    this->_cr_dp2_wp1.position.x    = this->_cr_dp2.position.x;
-    this->_cr_dp2_wp1.position.y    = this->_cr_dp1_wp1.position.y;
-    this->_cr_dp2_wp1.orientation   = dp_orientation;
-
-    this->_cr_dp2_wp2.position.x    = this->_cr_dp2.position.x;
-    this->_cr_dp2_wp2.position.y    = this->_cr_dp1_wp2.position.y;
-    this->_cr_dp2_wp2.orientation   = dp_orientation;
-
-    /*
-     * Delivery Point 3
-     */
-    this->_cr_dp3.position.x        = 1.414;
-    this->_cr_dp3.position.y        = this->_cr_dp1.position.y;
-    this->_cr_dp3.orientation       = dp_orientation;
-
-    this->_cr_dp3_wp1.position.x    = this->_cr_dp3.position.x;
-    this->_cr_dp3_wp1.position.y    = this->_cr_dp1_wp1.position.y;
-    this->_cr_dp3_wp1.orientation   = dp_orientation;
-
-    this->_cr_dp3_wp2.position.x    = this->_cr_dp3.position.x;
-    this->_cr_dp3_wp2.position.y    = this->_cr_dp1_wp2.position.y;
-    this->_cr_dp3_wp2.orientation   = dp_orientation;
-
-    /*
-     * Delivery Point 4
-     */
-    this->_cr_dp4.position.x        = 1.652;
-    this->_cr_dp4.position.y        = this->_cr_dp1.position.y;
-    this->_cr_dp4.orientation       = dp_orientation;
-
-    this->_cr_dp4_wp1.position.x    = this->_cr_dp4.position.x;
-    this->_cr_dp4_wp1.position.y    = this->_cr_dp1_wp1.position.y;
-    this->_cr_dp4_wp1.orientation   = dp_orientation;
-
-    this->_cr_dp4_wp2.position.x    = this->_cr_dp4.position.x;
-    this->_cr_dp4_wp2.position.y    = this->_cr_dp1_wp2.position.y;
-    this->_cr_dp4_wp2.orientation   = dp_orientation;
 }
 
 

@@ -21,7 +21,7 @@
 #include <vector>
 #include <string>
 
-#include "Coordinates.hpp"
+#include "RedCoordinates.hpp"
 
 enum class OpMode
     : uint8_t
@@ -787,7 +787,7 @@ void CrMain::control_timer_callback(const ros::TimerEvent& event)
         if (this->_status == ControllerStatus::standby)
         {
             // TODO: this is INSANE
-            if (this->_next_pressed)    // || true)
+            if (this->_next_pressed || true)
             {
                 this->enable_actuators();
                 //this->restart();
@@ -806,7 +806,7 @@ void CrMain::control_timer_callback(const ros::TimerEvent& event)
         {
             //this->unchuck_all();
 
-            set_pose(Coordinates::GetInstance()->get_cr_sz());
+            set_pose(RedCoordinates::GetInstance()->get_cr_sz());
 
             this->_next_pressed = false;
             //clear_flags();
@@ -848,12 +848,12 @@ void CrMain::control_timer_callback(const ros::TimerEvent& event)
         {
             if (_wp)
             {
-                this->publish_path_to(Coordinates::GetInstance()->get_cr_pp1_wp2());
+                this->publish_path_to(RedCoordinates::GetInstance()->get_cr_pp1_wp2());
             }
             else
             {
-                this->publish_path_to(Coordinates::GetInstance()->get_cr_pp1(),
-                        Coordinates::GetInstance()->get_cr_pp1_wp1(), Coordinates::GetInstance()->get_cr_pp1_wp2());
+                this->publish_path_to(RedCoordinates::GetInstance()->get_cr_pp1(),
+                        RedCoordinates::GetInstance()->get_cr_pp1_wp1(), RedCoordinates::GetInstance()->get_cr_pp1_wp2());
             }
 
             clear_flags();
@@ -892,12 +892,12 @@ void CrMain::control_timer_callback(const ros::TimerEvent& event)
         {
             if (_wp)
             {
-                this->publish_path_to(Coordinates::GetInstance()->get_cr_pp2_wp2());
+                this->publish_path_to(RedCoordinates::GetInstance()->get_cr_pp2_wp2());
             }
             else
             {
-                this->publish_path_to(Coordinates::GetInstance()->get_cr_pp2(),
-                        Coordinates::GetInstance()->get_cr_pp2_wp1(), Coordinates::GetInstance()->get_cr_pp2_wp2());
+                this->publish_path_to(RedCoordinates::GetInstance()->get_cr_pp2(),
+                        RedCoordinates::GetInstance()->get_cr_pp2_wp1(), RedCoordinates::GetInstance()->get_cr_pp2_wp2());
             }
 
             clear_flags();
@@ -936,12 +936,12 @@ void CrMain::control_timer_callback(const ros::TimerEvent& event)
         {
             if (_wp)
             {
-                this->publish_path_to(Coordinates::GetInstance()->get_cr_pp3_wp2());
+                this->publish_path_to(RedCoordinates::GetInstance()->get_cr_pp3_wp2());
             }
             else
             {
-                this->publish_path_to(Coordinates::GetInstance()->get_cr_pp3(),
-                        Coordinates::GetInstance()->get_cr_pp3_wp1(), Coordinates::GetInstance()->get_cr_pp3_wp2());
+                this->publish_path_to(RedCoordinates::GetInstance()->get_cr_pp3(),
+                        RedCoordinates::GetInstance()->get_cr_pp3_wp1(), RedCoordinates::GetInstance()->get_cr_pp3_wp2());
             }
 
             clear_flags();
@@ -980,12 +980,12 @@ void CrMain::control_timer_callback(const ros::TimerEvent& event)
         {
             if (_wp)
             {
-                this->publish_path_to(Coordinates::GetInstance()->get_cr_pp4_wp2());
+                this->publish_path_to(RedCoordinates::GetInstance()->get_cr_pp4_wp2());
             }
             else
             {
-                this->publish_path_to(Coordinates::GetInstance()->get_cr_pp4(),
-                        Coordinates::GetInstance()->get_cr_pp4_wp1(), Coordinates::GetInstance()->get_cr_pp4_wp2());
+                this->publish_path_to(RedCoordinates::GetInstance()->get_cr_pp4(),
+                        RedCoordinates::GetInstance()->get_cr_pp4_wp1(), RedCoordinates::GetInstance()->get_cr_pp4_wp2());
             }
 
             clear_flags();
@@ -1024,12 +1024,12 @@ void CrMain::control_timer_callback(const ros::TimerEvent& event)
         {
             if (_wp)
             {
-                this->publish_path_to(Coordinates::GetInstance()->get_cr_dp1_wp2());
+                this->publish_path_to(RedCoordinates::GetInstance()->get_cr_dp1_wp2());
             }
             else
             {
-                this->publish_path_to(Coordinates::GetInstance()->get_cr_dp1(),
-                        Coordinates::GetInstance()->get_cr_dp1_wp1(), Coordinates::GetInstance()->get_cr_dp1_wp2());
+                this->publish_path_to(RedCoordinates::GetInstance()->get_cr_dp1(),
+                        RedCoordinates::GetInstance()->get_cr_dp1_wp1(), RedCoordinates::GetInstance()->get_cr_dp1_wp2());
             }
 
             clear_flags();
@@ -1068,12 +1068,12 @@ void CrMain::control_timer_callback(const ros::TimerEvent& event)
         {
             if (_wp)
             {
-                this->publish_path_to(Coordinates::GetInstance()->get_cr_dp2_wp2());
+                this->publish_path_to(RedCoordinates::GetInstance()->get_cr_dp2_wp2());
             }
             else
             {
-                this->publish_path_to(Coordinates::GetInstance()->get_cr_dp2(),
-                        Coordinates::GetInstance()->get_cr_dp2_wp1(), Coordinates::GetInstance()->get_cr_dp2_wp2());
+                this->publish_path_to(RedCoordinates::GetInstance()->get_cr_dp2(),
+                        RedCoordinates::GetInstance()->get_cr_dp2_wp1(), RedCoordinates::GetInstance()->get_cr_dp2_wp2());
             }
 
             clear_flags();
@@ -1112,12 +1112,12 @@ void CrMain::control_timer_callback(const ros::TimerEvent& event)
         {
             if (_wp)
             {
-                this->publish_path_to(Coordinates::GetInstance()->get_cr_dp3_wp2());
+                this->publish_path_to(RedCoordinates::GetInstance()->get_cr_dp3_wp2());
             }
             else
             {
-                this->publish_path_to(Coordinates::GetInstance()->get_cr_dp3(),
-                        Coordinates::GetInstance()->get_cr_dp3_wp1(), Coordinates::GetInstance()->get_cr_dp3_wp2());
+                this->publish_path_to(RedCoordinates::GetInstance()->get_cr_dp3(),
+                        RedCoordinates::GetInstance()->get_cr_dp3_wp1(), RedCoordinates::GetInstance()->get_cr_dp3_wp2());
             }
 
             clear_flags();
@@ -1156,12 +1156,12 @@ void CrMain::control_timer_callback(const ros::TimerEvent& event)
         {
             if (_wp)
             {
-                this->publish_path_to(Coordinates::GetInstance()->get_cr_dp4_wp2());
+                this->publish_path_to(RedCoordinates::GetInstance()->get_cr_dp4_wp2());
             }
             else
             {
-                this->publish_path_to(Coordinates::GetInstance()->get_cr_dp4(),
-                        Coordinates::GetInstance()->get_cr_dp4_wp1(), Coordinates::GetInstance()->get_cr_dp4_wp2());
+                this->publish_path_to(RedCoordinates::GetInstance()->get_cr_dp4(),
+                        RedCoordinates::GetInstance()->get_cr_dp4_wp1(), RedCoordinates::GetInstance()->get_cr_dp4_wp2());
             }
 
             clear_flags();
@@ -1183,7 +1183,7 @@ void CrMain::control_timer_callback(const ros::TimerEvent& event)
         }
         else
         {
-            this->publish_path_to(Coordinates::GetInstance()->get_cr_sz());
+            this->publish_path_to(RedCoordinates::GetInstance()->get_cr_sz());
 
             clear_flags();
             this->_status = ControllerStatus::moving;
