@@ -376,13 +376,16 @@ void CrMain::handStatusCallback(const std_msgs::UInt16::ConstPtr& msg)
 
 void CrMain::shutdownInputCallback(const std_msgs::Empty::ConstPtr& msg)
 {
+    /*
     if (this->_status != ControllerStatus::shutdown)
     {
         this->_status = ControllerStatus::shutdown;
         this->currentCommandIndex = -1;
 
         ROS_INFO("Aborting.");
-    }
+    }*/
+
+    shutdown();
 
     // reset this:
     // this->CurrentCommandIndex = -1;
