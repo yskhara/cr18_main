@@ -489,7 +489,7 @@ void CrMain::joyCallback(const sensor_msgs::Joy::ConstPtr& joy)
     {
         bool rb = joy->buttons[ButtonRB];
         bool lb = joy->buttons[ButtonLB];
-        int dx = joy->axes[AxisDPadX];
+        int dx = -joy->axes[AxisDPadX];
         int dy = joy->axes[AxisDPadY];
 
         if(lb && !rb)
