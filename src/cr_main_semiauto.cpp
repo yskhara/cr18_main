@@ -853,9 +853,11 @@ void CrMain::publish_path_to_relative(const double dx, const double dy)
 
 void CrMain::control_timer_callback(const ros::TimerEvent& event)
 {
-    if (this->command_list.size() <= this->currentCommandIndex)
+    if ((long)this->command_list.size() <= (long)this->currentCommandIndex)
     {
         ROS_INFO("shutting down on an error: current command index is invalid.");
+        ROS_INFO("size of command list: %ld", this->command_list.size());
+        ROS_INFO("current index: %d", this->currentCommandIndex);
         this->shutdown();
 
         return;
