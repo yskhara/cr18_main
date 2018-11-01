@@ -21,20 +21,14 @@
 #include <vector>
 #include <string>
 
+#include "BlueCoordinates.hpp"
 #include "RedCoordinates.hpp"
 
-enum class OpMode
+enum class Side
     : uint8_t
     {
-        route1_pp1_op = 0b000,        // sz -> pp1 -> pp2 -> pp3 -> pp4
-    route1_pp2_op = 0b001,        // sz -> pp2 -> pp3 -> pp4
-    route1_pp3_op = 0b010,        // sz -> pp3 -> pp4
-    route1_pp4_op = 0b011,        // sz -> pp4
-
-    route2_pp1_op = 0b100,        // sz -> pp1 -> pp2 -> pp3 -> pp4
-    route2_pp2_op = 0b101,        // sz -> pp2 -> pp3 -> pp4
-    route2_pp3_op = 0b110,        // sz -> pp3 -> pp4
-    route2_pp4_op = 0b111,        // sz -> pp4
+        blue = 0,
+    red = 1,
 };
 
 enum class ControllerStatus
@@ -61,11 +55,13 @@ enum class ControllerCommands
     pp_pickup,						// pick up shuttles at a PP
     dp_deliver,					    // deliver shuttles at a DP
 
+    pp_backup,                      // back up
+    dp_backup,                      // back up
+
     move_to_pp1,                    // move to PP1
     move_to_pp2,                    // move to PP2
     move_to_pp3,                    // move to PP3
     move_to_pp4,                    // move to PP4
-    move_to_pp5,                    // move to PP4
 
     move_to_dp1,					// move to DP1
     move_to_dp2,                    // move to DP2
@@ -84,11 +80,6 @@ enum class ControllerCommands
 
     segno,
     dal_segno,
-
-    checkpoint_pp1,
-    checkpoint_pp2,
-    checkpoint_pp3,
-    checkpoint_pp4,
 };
 
 class CrMain
@@ -147,8 +138,6 @@ private:
     //static constexpr int lift_position_second = lift_position_first - (248 * steps_per_mm);
     //static constexpr int lift_position_third = lift_position_second - (248 * steps_per_mm);
 
-    OpMode _op_mode = OpMode::route1_pp1_op;
-
     int currentCommandIndex = -1;
     const std::vector<ControllerCommands> *command_list;
     static const std::vector<ControllerCommands> route1_pp1_op_commands;
@@ -169,6 +158,10 @@ private:
     double _target_y = 0.0;
     double _target_yaw = M_PI / 2.0;
     bool _rush = false;
+
+    // true for blue
+    bool side = true;
+    const Coordinates *coordinates = nullptr;
 
     //double _receive_delay_s;
 
@@ -281,6 +274,25 @@ CrMain::CrMain(void)
     auto private_nh = ros::NodeHandle("~");
     private_nh.param("amt_coeff", this->_amt_coeff, 0.25);
 
+    std::string side_str;
+    private_nh.param<std::string>("side", side_str, "blue");
+    if(side_str == "red")
+    {
+        this->side = false;
+        this->coordinates = this->coordinates;
+    }
+    else if(side_str == "blue")
+    {
+        this->side = true;
+        this->coordinates = BlueCoordinates::GetInstance();
+    }
+    else
+    {
+        ROS_WARN("the value for parameter side is not valid.");
+        this->side = true;
+        this->coordinates = BlueCoordinates::GetInstance();
+    }
+
     this->lift_position =
     {   0, 51, 51 + 248, 51 + (2 * 248)};
     std::vector<int> tmp;
@@ -380,14 +392,14 @@ void CrMain::handStatusCallback(const std_msgs::UInt16::ConstPtr& msg)
 void CrMain::shutdownInputCallback(const std_msgs::Bool::ConstPtr& msg)
 {
     /*
-    if (this->_status != ControllerStatus::shutdown)
-    {
-        this->_status = ControllerStatus::shutdown;
-        this->currentCommandIndex = -1;
+     if (this->_status != ControllerStatus::shutdown)
+     {
+     this->_status = ControllerStatus::shutdown;
+     this->currentCommandIndex = -1;
 
-        ROS_INFO("Aborting.");
-    }*/
-    if(!msg->data)
+     ROS_INFO("Aborting.");
+     }*/
+    if (!msg->data)
     {
         return;
     }
@@ -407,7 +419,7 @@ void CrMain::startInputCallback(const std_msgs::Bool::ConstPtr& msg)
 {
     // bring the robot back operational
 
-    if(!msg->data)
+    if (!msg->data)
     {
         return;
     }
@@ -485,63 +497,63 @@ void CrMain::joyCallback(const sensor_msgs::Joy::ConstPtr& joy)
 
     }
 
-    if(this->_status == ControllerStatus::shutdown)
+    if (this->_status == ControllerStatus::shutdown)
     {
         bool rb = joy->buttons[ButtonRB];
         bool lb = joy->buttons[ButtonLB];
         int dx = -joy->axes[AxisDPadX];
         int dy = joy->axes[AxisDPadY];
 
-        if(lb && !rb)
+        if (lb && !rb)
         {
             // route 1
-            if(dx == 0 && dy > 0)
+            if (dx == 0 && dy > 0)
             {
                 // from pp1
                 command_list = &CrMain::route1_pp1_op_commands;
                 ROS_INFO("operation mode set to route1_pp1_op. command size: %ld", this->command_list->size());
             }
-            else if(dx > 0 && dy == 0)
+            else if (dx > 0 && dy == 0)
             {
                 // from pp2
                 command_list = &CrMain::route1_pp2_op_commands;
                 ROS_INFO("operation mode set to route1_pp2_op. command size: %ld", this->command_list->size());
             }
-            else if(dx == 0 && dy < 0)
+            else if (dx == 0 && dy < 0)
             {
                 // from pp3
                 command_list = &CrMain::route1_pp3_op_commands;
                 ROS_INFO("operation mode set to route1_pp3_op. command size: %ld", this->command_list->size());
             }
-            else if(dx < 0 && dy == 0)
+            else if (dx < 0 && dy == 0)
             {
                 // from pp4
                 command_list = &CrMain::route1_pp4_op_commands;
                 ROS_INFO("operation mode set to route1_pp4_op. command size: %ld", this->command_list->size());
             }
         }
-        else if(rb && !lb)
+        else if (rb && !lb)
         {
             // route 2
-            if(dx == 0 && dy > 0)
+            if (dx == 0 && dy > 0)
             {
                 // from pp1
                 command_list = &CrMain::route2_pp1_op_commands;
                 ROS_INFO("operation mode set to route2_pp1_op. command size: %ld", this->command_list->size());
             }
-            else if(dx > 0 && dy == 0)
+            else if (dx > 0 && dy == 0)
             {
                 // from pp2
                 command_list = &CrMain::route2_pp2_op_commands;
                 ROS_INFO("operation mode set to route2_pp2_op. command size: %ld", this->command_list->size());
             }
-            else if(dx == 0 && dy < 0)
+            else if (dx == 0 && dy < 0)
             {
                 // from pp3
                 command_list = &CrMain::route2_pp3_op_commands;
                 ROS_INFO("operation mode set to route2_pp3_op. command size: %ld", this->command_list->size());
             }
-            else if(dx < 0 && dy == 0)
+            else if (dx < 0 && dy == 0)
             {
                 // from pp4
                 command_list = &CrMain::route2_pp4_op_commands;
@@ -560,7 +572,7 @@ void CrMain::joyCallback(const sensor_msgs::Joy::ConstPtr& joy)
         //swap x and y
         this->_target_x = joy->axes[AxisLeftThumbY];
         this->_target_y = joy->axes[AxisLeftThumbX];
-        this->_rush = false;//(joy->buttons[ButtonRB] != 0);
+        this->_rush = false;    //(joy->buttons[ButtonRB] != 0);
     }
     else
     {
@@ -749,7 +761,7 @@ void CrMain::publish_path_to_relative(const double dx, const double dy)
 
 void CrMain::control_timer_callback(const ros::TimerEvent& event)
 {
-    if ((long)this->command_list->size() <= (long)this->currentCommandIndex)
+    if ((long) this->command_list->size() <= (long) this->currentCommandIndex)
     {
         ROS_INFO("shutting down on an error: current command index is invalid.");
         ROS_INFO("size of command list: %ld", this->command_list->size());
@@ -786,7 +798,7 @@ void CrMain::control_timer_callback(const ros::TimerEvent& event)
         if (this->_status == ControllerStatus::standby)
         {
             // TODO: this is INSANE
-            if (this->_next_pressed)// || true)
+            if (this->_next_pressed)    // || true)
             {
                 this->enable_actuators();
                 //this->restart();
@@ -806,7 +818,8 @@ void CrMain::control_timer_callback(const ros::TimerEvent& event)
             //this->unchuck_all();
 
             ROS_INFO("setting initial position.");
-            set_pose(RedCoordinates::GetInstance()->get_cr_sz());
+
+            set_pose(this->coordinates->get_cr_sz());
 
             this->_next_pressed = false;
             //clear_flags();
@@ -848,12 +861,11 @@ void CrMain::control_timer_callback(const ros::TimerEvent& event)
         {
             if (_wp)
             {
-                this->publish_path_to(RedCoordinates::GetInstance()->get_cr_pp1_wp2());
+                this->publish_path_to(this->coordinates->get_cr_pp1_wp1());
             }
             else
             {
-                this->publish_path_to(RedCoordinates::GetInstance()->get_cr_pp1(),
-                        RedCoordinates::GetInstance()->get_cr_pp1_wp1(), RedCoordinates::GetInstance()->get_cr_pp1_wp2());
+                this->publish_path_to(this->coordinates->get_cr_pp1());
             }
 
             clear_flags();
@@ -892,12 +904,11 @@ void CrMain::control_timer_callback(const ros::TimerEvent& event)
         {
             if (_wp)
             {
-                this->publish_path_to(RedCoordinates::GetInstance()->get_cr_pp2_wp2());
+                this->publish_path_to(this->coordinates->get_cr_pp2_wp1());
             }
             else
             {
-                this->publish_path_to(RedCoordinates::GetInstance()->get_cr_pp2(),
-                        RedCoordinates::GetInstance()->get_cr_pp2_wp1(), RedCoordinates::GetInstance()->get_cr_pp2_wp2());
+                this->publish_path_to(this->coordinates->get_cr_pp2());
             }
 
             clear_flags();
@@ -936,12 +947,11 @@ void CrMain::control_timer_callback(const ros::TimerEvent& event)
         {
             if (_wp)
             {
-                this->publish_path_to(RedCoordinates::GetInstance()->get_cr_pp3_wp2());
+                this->publish_path_to(this->coordinates->get_cr_pp3_wp1());
             }
             else
             {
-                this->publish_path_to(RedCoordinates::GetInstance()->get_cr_pp3(),
-                        RedCoordinates::GetInstance()->get_cr_pp3_wp1(), RedCoordinates::GetInstance()->get_cr_pp3_wp2());
+                this->publish_path_to(this->coordinates->get_cr_pp3());
             }
 
             clear_flags();
@@ -980,12 +990,11 @@ void CrMain::control_timer_callback(const ros::TimerEvent& event)
         {
             if (_wp)
             {
-                this->publish_path_to(RedCoordinates::GetInstance()->get_cr_pp4_wp2());
+                this->publish_path_to(this->coordinates->get_cr_pp4_wp1());
             }
             else
             {
-                this->publish_path_to(RedCoordinates::GetInstance()->get_cr_pp4(),
-                        RedCoordinates::GetInstance()->get_cr_pp4_wp1(), RedCoordinates::GetInstance()->get_cr_pp4_wp2());
+                this->publish_path_to(this->coordinates->get_cr_pp4());
             }
 
             clear_flags();
@@ -1024,12 +1033,11 @@ void CrMain::control_timer_callback(const ros::TimerEvent& event)
         {
             if (_wp)
             {
-                this->publish_path_to(RedCoordinates::GetInstance()->get_cr_dp1_wp2());
+                this->publish_path_to(this->coordinates->get_cr_dp1_wp1());
             }
             else
             {
-                this->publish_path_to(RedCoordinates::GetInstance()->get_cr_dp1(),
-                        RedCoordinates::GetInstance()->get_cr_dp1_wp1(), RedCoordinates::GetInstance()->get_cr_dp1_wp2());
+                this->publish_path_to(this->coordinates->get_cr_dp1());
             }
 
             clear_flags();
@@ -1068,12 +1076,11 @@ void CrMain::control_timer_callback(const ros::TimerEvent& event)
         {
             if (_wp)
             {
-                this->publish_path_to(RedCoordinates::GetInstance()->get_cr_dp2_wp2());
+                this->publish_path_to(this->coordinates->get_cr_dp2_wp1());
             }
             else
             {
-                this->publish_path_to(RedCoordinates::GetInstance()->get_cr_dp2(),
-                        RedCoordinates::GetInstance()->get_cr_dp2_wp1(), RedCoordinates::GetInstance()->get_cr_dp2_wp2());
+                this->publish_path_to(this->coordinates->get_cr_dp2());
             }
 
             clear_flags();
@@ -1112,12 +1119,11 @@ void CrMain::control_timer_callback(const ros::TimerEvent& event)
         {
             if (_wp)
             {
-                this->publish_path_to(RedCoordinates::GetInstance()->get_cr_dp3_wp2());
+                this->publish_path_to(this->coordinates->get_cr_dp3_wp1());
             }
             else
             {
-                this->publish_path_to(RedCoordinates::GetInstance()->get_cr_dp3(),
-                        RedCoordinates::GetInstance()->get_cr_dp3_wp1(), RedCoordinates::GetInstance()->get_cr_dp3_wp2());
+                this->publish_path_to(this->coordinates->get_cr_dp3());
             }
 
             clear_flags();
@@ -1156,12 +1162,11 @@ void CrMain::control_timer_callback(const ros::TimerEvent& event)
         {
             if (_wp)
             {
-                this->publish_path_to(RedCoordinates::GetInstance()->get_cr_dp4_wp2());
+                this->publish_path_to(this->coordinates->get_cr_dp4_wp1());
             }
             else
             {
-                this->publish_path_to(RedCoordinates::GetInstance()->get_cr_dp4(),
-                        RedCoordinates::GetInstance()->get_cr_dp4_wp1(), RedCoordinates::GetInstance()->get_cr_dp4_wp2());
+                this->publish_path_to(this->coordinates->get_cr_dp4());
             }
 
             clear_flags();
@@ -1183,7 +1188,7 @@ void CrMain::control_timer_callback(const ros::TimerEvent& event)
         }
         else
         {
-            this->publish_path_to(RedCoordinates::GetInstance()->get_cr_sz());
+            this->publish_path_to(this->coordinates->get_cr_sz());
 
             clear_flags();
             this->_status = ControllerStatus::moving;
@@ -1199,19 +1204,26 @@ void CrMain::control_timer_callback(const ros::TimerEvent& event)
                 clear_flags();
 
                 this->chuck();
-                this->move_lift(0);
 
-                // move y +0.4
-                this->publish_path_to_relative(0.000, 0.200);
+                this->_status = ControllerStatus::motion_cplt;
+                this->currentCommandIndex++;
+                ROS_INFO("picked up a workpiece.");
 
-                this->_status = ControllerStatus::moving;
-
-                // do not increment the command index
-
-                ROS_INFO("picked up workpieces and backing up now.");
+                set_delay(0.500);
             }
         }
-        else if (this->_status == ControllerStatus::moving)
+        else
+        {
+            clear_flags();
+            //this->move_lift(0);
+            this->_is_manual_enabled = true;
+            this->_status = ControllerStatus::pp_pickingup;
+        }
+        this->amt();
+    }
+    else if (currentCommand == ControllerCommands::pp_backup)
+    {
+        if (this->_status == ControllerStatus::moving)
         {
             if (this->_goal_reached)
             {
@@ -1219,16 +1231,16 @@ void CrMain::control_timer_callback(const ros::TimerEvent& event)
                 this->_status = ControllerStatus::motion_cplt;
 
                 this->currentCommandIndex++;
-                ROS_INFO("goal reached : ppx_wpy");
+                ROS_INFO("goal reached : ppx_wpy (backed up)");
             }
         }
         else
         {
             clear_flags();
-            this->_is_manual_enabled = true;
-            this->_status = ControllerStatus::pp_pickingup;
+            // move y +0.2
+            this->publish_path_to_relative(0.000, 0.200);
+            this->_status = ControllerStatus::moving;
         }
-        this->amt();
     }
     else if (currentCommand == ControllerCommands::dp_deliver)
     {
@@ -1240,25 +1252,11 @@ void CrMain::control_timer_callback(const ros::TimerEvent& event)
 
                 this->unchuck();
 
-                // move y -0.4
-                this->publish_path_to_relative(0.000, -0.200);
-
-                this->_status = ControllerStatus::moving;
-
-                // do not increment the command index
-
-                ROS_INFO("delivered a workpiece and backing up now.");
-            }
-        }
-        else if (this->_status == ControllerStatus::moving)
-        {
-            if (this->_goal_reached)
-            {
-                clear_flags();
                 this->_status = ControllerStatus::motion_cplt;
-
                 this->currentCommandIndex++;
-                ROS_INFO("goal reached : dpx_wpy");
+                ROS_INFO("delivered a workpiece and backing up now.");
+
+                set_delay(0.500);
             }
         }
         else
@@ -1268,6 +1266,27 @@ void CrMain::control_timer_callback(const ros::TimerEvent& event)
             this->_status = ControllerStatus::dp_delivering;
         }
         this->amt();
+    }
+    else if (currentCommand == ControllerCommands::dp_backup)
+    {
+        if (this->_status == ControllerStatus::moving)
+        {
+            if (this->_goal_reached)
+            {
+                clear_flags();
+                this->_status = ControllerStatus::motion_cplt;
+
+                this->currentCommandIndex++;
+                ROS_INFO("goal reached : dpx_wpy (backed up)");
+            }
+        }
+        else
+        {
+            clear_flags();
+            // move y -0.4
+            this->publish_path_to_relative(0.000, -0.200);
+            this->_status = ControllerStatus::moving;
+        }
     }
     else if (currentCommand == ControllerCommands::set_lift_p)
     {
@@ -1335,22 +1354,6 @@ void CrMain::control_timer_callback(const ros::TimerEvent& event)
         }
         auto segno_index = std::distance(this->command_list->begin(), segno_iter);
         this->currentCommandIndex = segno_index;
-    }
-    else if (currentCommand == ControllerCommands::checkpoint_pp1)
-    {
-        this->currentCommandIndex++;
-    }
-    else if (currentCommand == ControllerCommands::checkpoint_pp2)
-    {
-        this->currentCommandIndex++;
-    }
-    else if (currentCommand == ControllerCommands::checkpoint_pp3)
-    {
-        this->currentCommandIndex++;
-    }
-    else if (currentCommand == ControllerCommands::checkpoint_pp4)
-    {
-        this->currentCommandIndex++;
     }
     else
     {
