@@ -29,6 +29,39 @@
         <param name="deadzone" value="0.12" />
     </node>
 
+    <!-- Map server -->
+    <node name="map_server" pkg="map_server" type="map_server" args="$(find cr18_main)/map/cr18_full.yaml" />
+
+    <!-- odometry broadcaster -->
+    <node pkg="base_controller" type="odom_publisher" name="odom_publisher" if="true">
+        <param name="ctrl_freq" value="120" />
+        <param name="odom_frame" value="odom" />
+
+        <remap from="/odom/yaw" to="/odom_raw/yaw" />
+        <remap from="/odom/x" to="/odom_raw/x" />
+        <remap from="/odom/y" to="/odom_raw/y" />
+    </node>
+
+    <!-- dummy odom -->
+    <node pkg="navigation" type="dummy_odom" name="dummy_odom" if="false">
+        <param name="freq" value="200" />
+        <param name="odom_frame" value="odom" />
+    </node>
+
+    <!-- dummy amcl -->
+    <node pkg="navigation" type="dummy_amcl" name="dummy_amcl" if="true">
+    </node>
+
+    <!-- odometry TF broadcaster -->
+    <node pkg="navigation" type="odometry_broadcaster" name="odom_brdcster">
+        <param name="freq" value="150" />
+        <param name="odom_frame" value="odom" />
+        <param name="base_frame" value="odom_link" />
+    </node>
+
+    <node pkg="tf" type="static_transform_publisher" name="base_link_broadcaster"
+        args="0.045286 0 0 0 0 0 odom_link base_link 100" />
+
     <!-- base itself -->
     <node pkg="rosserial_server" type="serial_node" name="base">
         <rosparam>
@@ -43,6 +76,9 @@
             port: /dev/ttyUSB1
             baud: 921600
         </rosparam>
+        <remap from="/odom/yaw" to="/odom_raw/yaw" />
+        <remap from="/odom/x" to="/odom_raw/x" />
+        <remap from="/odom/y" to="/odom_raw/y" />
     </node>
 
     <node pkg="rosserial_python" type="message_info_service.py" name="rosserial_message_info" />
