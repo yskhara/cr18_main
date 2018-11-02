@@ -9,7 +9,7 @@
 #include <sensor_msgs/Joy.h>
 #include <std_msgs/Int32.h>
 #include <std_msgs/Bool.h>
-#include <std_msgs/Empty.h>
+//#include <std_msgs/Empty.h>
 #include <vector>
 #include <string>
 /*
@@ -68,8 +68,8 @@ public:
     CrMain(void);
 
 private:
-    void shutdownInputCallback(const std_msgs::Empty::ConstPtr& msg);
-    void startInputCallback(const std_msgs::Empty::ConstPtr& msg);
+    void shutdownInputCallback(const std_msgs::Bool::ConstPtr& msg);
+    void startInputCallback(const std_msgs::Bool::ConstPtr& msg);
     void joyCallback(const sensor_msgs::Joy::ConstPtr& joy);
 
     ros::NodeHandle nh_;
@@ -130,8 +130,8 @@ int CrMain::AxisDPadY = 7;
 CrMain::CrMain(void)
 {
     joy_sub = nh_.subscribe<sensor_msgs::Joy>("joy", 10, &CrMain::joyCallback, this);
-    shutdown_input_sub = nh_.subscribe<std_msgs::Empty>("shutdown_input", 10, &CrMain::shutdownInputCallback, this);
-    start_input_sub = nh_.subscribe<std_msgs::Empty>("start_input", 10, &CrMain::startInputCallback, this);
+    shutdown_input_sub = nh_.subscribe<std_msgs::Bool>("shutdown_input", 10, &CrMain::shutdownInputCallback, this);
+    start_input_sub = nh_.subscribe<std_msgs::Bool>("start_input", 10, &CrMain::startInputCallback, this);
 
     this->lift_position_pub = nh_.advertise<std_msgs::Int32>("lift_position", 1);
     this->hand_cylinder_pub = nh_.advertise<std_msgs::Bool>("hand_cylinder", 1);
@@ -172,8 +172,13 @@ CrMain::CrMain(void)
     nh_.getParam("AxisDPadY", AxisDPadY);
 }
 
-void CrMain::shutdownInputCallback(const std_msgs::Empty::ConstPtr& msg)
+void CrMain::shutdownInputCallback(const std_msgs::Bool::ConstPtr& msg)
 {
+    if(!msg->data)
+    {
+        return;
+    }
+
     if (!this->_shutdown)
     {
         this->_shutdown = true;
@@ -186,8 +191,13 @@ void CrMain::shutdownInputCallback(const std_msgs::Empty::ConstPtr& msg)
     lift_position_index = 0;
 }
 
-void CrMain::startInputCallback(const std_msgs::Empty::ConstPtr& msg)
+void CrMain::startInputCallback(const std_msgs::Bool::ConstPtr& msg)
 {
+    if(!msg->data)
+    {
+        return;
+    }
+
     // bring the robot back operational
 
     ROS_INFO("starting.");
