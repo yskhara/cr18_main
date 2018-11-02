@@ -572,10 +572,22 @@ void CrMain::joyCallback(const sensor_msgs::Joy::ConstPtr& joy)
 
     if (this->_is_manual_enabled)
     {
-        //swap x and y
-        this->_target_x = joy->axes[AxisLeftThumbY];
-        this->_target_y = joy->axes[AxisLeftThumbX];
-        this->_rush = false;    //(joy->buttons[ButtonRB] != 0);
+        if(this->side)
+        {
+            //blue side
+            //swap x and y
+            this->_target_x = joy->axes[AxisLeftThumbY];
+            this->_target_y = joy->axes[AxisLeftThumbX];
+            this->_rush = false;    //(joy->buttons[ButtonRB] != 0);
+        }
+        else
+        {
+            //red side
+            //swap x and y
+            this->_target_x = -joy->axes[AxisLeftThumbY];
+            this->_target_y = -joy->axes[AxisLeftThumbX];
+            this->_rush = false;    //(joy->buttons[ButtonRB] != 0);
+        }
     }
     else
     {
