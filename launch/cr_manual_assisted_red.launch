@@ -1,0 +1,49 @@
+<launch>
+    <rosparam file="$(find cr18_main)/param/joy_assign_wireless.yaml" command="load" />
+    <!-- base controller -->
+    <node pkg="base_controller" type="base_controller" name="base_controller" output="screen">
+        <param name="motor_max_acc" value="35.000" />
+        <param name="motor_max_vel" value="37.699111843" />
+        <param name="motor_vel_coeff" value="33.333333333" />
+        <param name="robot_radius" value="0.172125" />
+        <param name="invert_x" value="true" />
+        <param name="invert_y" value="true" />
+        <param name="invert_z" value="false" />
+    </node>
+
+    <!-- tr_main -->
+    <node pkg="cr18_main" type="cr_main_joy" name="cr_main" output="screen">
+        <rosparam param="lift_position">[0, 51, 299, 547]</rosparam>
+    </node>
+
+    <!-- joy teleop -->
+    <node pkg="base_controller" type="base_teleop_joy_assisted" name="base_teleop_joy" output="screen">
+        <param name="max_lin" value="0.5" />
+        <param name="max_ang" value="1.570796327" />
+        <param name="invert_xy" value="true" />
+    </node>
+
+    <!-- joy node -->
+    <node respawn="true" pkg="joy" type="joy_node" name="joy_node">
+        <param name="dev" type="string" value="/dev/input/js0" />
+        <param name="deadzone" value="0.12" />
+    </node>
+
+    <!-- base itself -->
+    <node pkg="rosserial_server" type="serial_node" name="base">
+        <rosparam>
+            port: /dev/ttyUSB0
+            baud: 921600
+        </rosparam>
+    </node>
+    
+    <!-- base itself -->
+    <node pkg="rosserial_server" type="serial_node" name="odom">
+        <rosparam>
+            port: /dev/ttyUSB1
+            baud: 921600
+        </rosparam>
+    </node>
+
+    <node pkg="rosserial_python" type="message_info_service.py" name="rosserial_message_info" />
+</launch>
