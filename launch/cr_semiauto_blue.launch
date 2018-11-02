@@ -16,6 +16,7 @@
     <!-- tr_main -->
     <node pkg="cr18_main" type="cr_main_semiauto" name="cr_main" output="screen">
         <rosparam param="lift_position">[0, 51, 299, 547]</rosparam>
+        <rosparam param="side">blue</rosparam>
     </node>
 
     <!-- useless planner -->

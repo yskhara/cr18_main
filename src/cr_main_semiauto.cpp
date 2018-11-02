@@ -278,17 +278,20 @@ CrMain::CrMain(void)
     private_nh.param<std::string>("side", side_str, "blue");
     if(side_str == "red")
     {
+        ROS_INFO("on RED side.");
         this->side = false;
-        this->coordinates = this->coordinates;
+        this->coordinates = RedCoordinates::GetInstance();
     }
     else if(side_str == "blue")
     {
+        ROS_INFO("on BLUE side.");
         this->side = true;
         this->coordinates = BlueCoordinates::GetInstance();
     }
     else
     {
         ROS_WARN("the value for parameter side is not valid.");
+        ROS_INFO("on BLUE side.");
         this->side = true;
         this->coordinates = BlueCoordinates::GetInstance();
     }
