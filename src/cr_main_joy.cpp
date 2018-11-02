@@ -89,7 +89,7 @@ private:
 
     double steps_per_mm = 16 * 200 * 3 / 40;
 
-    std::vector<int> lift_position = { 0, 0, 0, 0, 0 };
+    std::vector<int> lift_position = { 0, 0, 0, 0 };
     int lift_position_index = 0;
     //		{0, -40 * steps_per_mm;
     //static constexpr int lift_position_first = -40 * steps_per_mm;
@@ -144,7 +144,7 @@ CrMain::CrMain(void)
 
     std::vector<int> tmp;
     nh_priv.getParam("lift_position", tmp);
-    if (tmp.size() == 5)
+    if (tmp.size() == 4)
     {
         this->lift_position = tmp;
     }
@@ -154,8 +154,8 @@ CrMain::CrMain(void)
         pos *= (-steps_per_mm);
     }
 
-    ROS_INFO("lift_pos: %d, %d, %d, %d, %d", this->lift_position[0], this->lift_position[1], this->lift_position[2],
-            this->lift_position[3], this->lift_position[4]);
+    ROS_INFO("lift_pos: %d, %d, %d, %d", this->lift_position[0], this->lift_position[1], this->lift_position[2],
+            this->lift_position[3]);
 
     nh_.getParam("ButtonA", ButtonA);
     nh_.getParam("ButtonB", ButtonB);
@@ -257,6 +257,7 @@ void CrMain::joyCallback(const sensor_msgs::Joy::ConstPtr& joy)
         else if (_lb && !last_lb)
         {
             // lower the lift
+            /*
             lift_position_index--;
             if (lift_position_index < 0)
             {
@@ -265,17 +266,50 @@ void CrMain::joyCallback(const sensor_msgs::Joy::ConstPtr& joy)
             lift_position_msg.data = lift_position[lift_position_index];
             lift_position_pub.publish(lift_position_msg);
 
-            //ROS_INFO("lift: %d")
+            //ROS_INFO("lift: %d");
+
+             */
         }
         else if (_rb && !last_rb)
         {
             // raise the lift
+            /*
             lift_position_index++;
             if (lift_position_index >= 5)
             {
                 lift_position_index = 4;
             }
             lift_position_msg.data = lift_position[lift_position_index];
+            lift_position_pub.publish(lift_position_msg);
+            */
+        }
+
+        int dx = -joy->axes[AxisDPadX];
+        int dy = joy->axes[AxisDPadY];
+
+        // route 1
+        if (dx == 0 && dy > 0)
+        {
+            // from pp1
+            lift_position_msg.data = lift_position[0];
+            lift_position_pub.publish(lift_position_msg);
+        }
+        else if (dx > 0 && dy == 0)
+        {
+            // from pp2
+            lift_position_msg.data = lift_position[1];
+            lift_position_pub.publish(lift_position_msg);
+        }
+        else if (dx == 0 && dy < 0)
+        {
+            // from pp3
+            lift_position_msg.data = lift_position[2];
+            lift_position_pub.publish(lift_position_msg);
+        }
+        else if (dx < 0 && dy == 0)
+        {
+            // from pp4
+            lift_position_msg.data = lift_position[3];
             lift_position_pub.publish(lift_position_msg);
         }
     }
