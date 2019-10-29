@@ -143,7 +143,7 @@ private:
 
     bool picker_extended = false;
     bool picker_retracted = false;
-    bool launcher_wheel_running = true;
+    bool launcher_wheel_running = false;
     bool launcher_wheel_stop_scheduled = false;
     bool loader_loading = false;
 
@@ -346,6 +346,7 @@ void CrMain::joyCallback(const sensor_msgs::Joy::ConstPtr& joy)
 
         if (_y && !last_y)
         {
+            picker_retract_timer.stop();
             extendPicker();
             startPickerFan();
         }
@@ -488,7 +489,9 @@ void CrMain::pickerExtendTimerCallback(const ros::TimerEvent& event)
 {
     // picker already retracted and the fan turned off, so extend again and start the fan
     extendPicker();
-    startPickerFan();
+
+    // don't start the fan just yet
+    //startPickerFan();
 }
 
 void CrMain::pickerRetractTimerCallback(const ros::TimerEvent& event)
