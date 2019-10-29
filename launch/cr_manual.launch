@@ -14,6 +14,16 @@
     <!-- tr_main -->
     <node pkg="cr18_main" type="cr_main_joy" name="cr_main" output="screen">
         <rosparam param="lift_position">[0, 51, 299, 547]</rosparam>
+        <rosparam param="picker_esc_on">2000</rosparam>
+        <rosparam param="picker_esc_off">1520</rosparam>
+        <rosparam param="picker_servo_extend">1600</rosparam>
+        <rosparam param="picker_servo_retract">1400</rosparam>
+        
+        <rosparam param="loader_retract_delay">3.0</rosparam>
+        <rosparam param="picker_retract_delay">2.0</rosparam>
+        <rosparam param="picker_extend_delay">1.0</rosparam>
+        
+        
     </node>
     
     <!-- joy teleop -->
