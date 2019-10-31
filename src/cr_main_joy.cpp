@@ -10,7 +10,7 @@
 #include <std_msgs/Int32.h>
 #include <std_msgs/Int16.h>
 #include <std_msgs/Bool.h>
-//#include <std_msgs/Empty.h>
+#include <std_msgs/Empty.h>
 #include <vector>
 #include <string>
 /*
@@ -69,8 +69,8 @@ public:
     CrMain(void);
 
 private:
-    void shutdownInputCallback(const std_msgs::Bool::ConstPtr& msg);
-    void startInputCallback(const std_msgs::Bool::ConstPtr& msg);
+    void shutdownInputCallback(const std_msgs::Empty::ConstPtr& msg);
+    void startInputCallback(const std_msgs::Empty::ConstPtr& msg);
     void joyCallback(const sensor_msgs::Joy::ConstPtr& joy);
 
     void driveLauncherWheel(void);
@@ -116,12 +116,14 @@ private:
     std_msgs::Int16 picker_esc_msg;
     std_msgs::Int16 picker_servo_msg;
 
-    double steps_per_mm = 16 * 200 * 3 / 40;
+    static constexpr double pitch_steps_per_rev = (144.0 / 16) * 16 * 200;
+    double pitch_steps_per_deg = pitch_steps_per_rev / 360.0;
 
     static constexpr int servo_neutral = 1520;
 
-    int picker_esc_on = 2000;       // fully on
-    int picker_esc_off = servo_neutral;      // neutral
+    int launcher_esc_off = 1000;      // min
+    int picker_esc_on = 1520;       // fully on
+    int picker_esc_off = 1000;      // min
     int picker_servo_extend = servo_neutral;
     int picker_servo_retract = servo_neutral;
     int loader_servo_extend = servo_neutral;
@@ -131,7 +133,7 @@ private:
     double picker_retract_delay = 3.0;
     double picker_extend_delay = 3.0;
 
-    std::vector<int> pitch_angle_list = { 0, 0, 0, 0 };
+    std::vector<double> pitch_angle_list = { 0.0, 0.0, 0.0, 0.0 };
     std::vector<int> launcher_esc_list = { 0, 0, 0, 0 };
     int launcher_target_index = 0;
     //		{0, -40 * steps_per_mm;
@@ -179,8 +181,8 @@ int CrMain::AxisDPadY = 7;
 CrMain::CrMain(void)
 {
     joy_sub = nh_.subscribe<sensor_msgs::Joy>("joy", 10, &CrMain::joyCallback, this);
-    shutdown_input_sub = nh_.subscribe<std_msgs::Bool>("shutdown_input", 10, &CrMain::shutdownInputCallback, this);
-    start_input_sub = nh_.subscribe<std_msgs::Bool>("start_input", 10, &CrMain::startInputCallback, this);
+    shutdown_input_sub = nh_.subscribe<std_msgs::Empty>("shutdown_input", 10, &CrMain::shutdownInputCallback, this);
+    start_input_sub = nh_.subscribe<std_msgs::Empty>("start_input", 10, &CrMain::startInputCallback, this);
 
     this->launcher_esc_pub = nh_.advertise<std_msgs::Int16>("launcher_esc", 1);
     this->loader_servo_pub = nh_.advertise<std_msgs::Int16>("loader_servo", 1);
@@ -193,8 +195,9 @@ CrMain::CrMain(void)
 
     auto nh_priv = ros::NodeHandle("~");
 
-    nh_priv.getParam("lift_step_per_mm", this->steps_per_mm);
+    nh_priv.getParam("pitch_steps_per_deg", this->pitch_steps_per_deg);
 
+    nh_priv.getParam("launcher_esc_off", this->launcher_esc_off);
     nh_priv.getParam("picker_esc_on", this->picker_esc_on);
     nh_priv.getParam("picker_esc_off", this->picker_esc_off);
     nh_priv.getParam("picker_servo_extend", this->picker_servo_extend);
@@ -212,6 +215,7 @@ CrMain::CrMain(void)
             false);
     picker_extend_timer = nh_.createTimer(picker_extend_delay, &CrMain::pickerExtendTimerCallback, this, true, false);
 
+    ROS_INFO("launcher_esc_off: %d", this->launcher_esc_off);
     ROS_INFO("picker_esc_on: %d", this->picker_esc_on);
     ROS_INFO("picker_esc_off: %d", this->picker_esc_off);
     ROS_INFO("picker_servo_extend: %d", this->picker_servo_extend);
@@ -219,22 +223,23 @@ CrMain::CrMain(void)
     ROS_INFO("loader_servo_extend: %d", this->loader_servo_extend);
     ROS_INFO("loader_servo_retract: %d", this->loader_servo_retract);
 
-    std::vector<int> tmp;
-    nh_priv.getParam("pitch_angle", tmp);
-    if (tmp.size() == 4)
+    std::vector<double> tmp_angle_list;
+    nh_priv.getParam("pitch_angle", tmp_angle_list);
+    if (tmp_angle_list.size() == 4)
     {
-        this->pitch_angle_list = tmp;
+        this->pitch_angle_list = tmp_angle_list;
     }
-
-    /*
-     for (int& pos : this->pitch_angle_list)
-     {
-     pos *= (-steps_per_mm);
-     }
-     */
-
-    ROS_INFO("lift_pos: %d, %d, %d, %d", this->pitch_angle_list[0], this->pitch_angle_list[1],
+    ROS_INFO("pitch_angle: %lf, %lf, %lf, %lf", this->pitch_angle_list[0], this->pitch_angle_list[1],
             this->pitch_angle_list[2], this->pitch_angle_list[3]);
+
+    std::vector<int> tmp_esc_list;
+    nh_priv.getParam("launcher_esc", tmp_esc_list);
+    if (tmp_esc_list.size() == 4)
+    {
+        this->launcher_esc_list = tmp_esc_list;
+    }
+    ROS_INFO("launcher_esc: %d, %d, %d, %d", this->launcher_esc_list[0], this->launcher_esc_list[1],
+            this->launcher_esc_list[2], this->launcher_esc_list[3]);
 
     nh_.getParam("ButtonA", ButtonA);
     nh_.getParam("ButtonB", ButtonB);
@@ -251,13 +256,8 @@ CrMain::CrMain(void)
     nh_.getParam("AxisDPadY", AxisDPadY);
 }
 
-void CrMain::shutdownInputCallback(const std_msgs::Bool::ConstPtr& msg)
+void CrMain::shutdownInputCallback(const std_msgs::Empty::ConstPtr& msg)
 {
-    if (!msg->data)
-    {
-        return;
-    }
-
     if (!this->_shutdown)
     {
         this->_shutdown = true;
@@ -270,13 +270,8 @@ void CrMain::shutdownInputCallback(const std_msgs::Bool::ConstPtr& msg)
     launcher_target_index = 0;
 }
 
-void CrMain::startInputCallback(const std_msgs::Bool::ConstPtr& msg)
+void CrMain::startInputCallback(const std_msgs::Empty::ConstPtr& msg)
 {
-    if (!msg->data)
-    {
-        return;
-    }
-
     // bring the robot back operational
 
     ROS_INFO("starting.");
@@ -396,7 +391,7 @@ void CrMain::joyCallback(const sensor_msgs::Joy::ConstPtr& joy)
         {
             // down?
             // middle(center) target
-            launcher_target_index = 1;
+            launcher_target_index = 0;
             driveLauncherWheel();
             drivePitch();
         }
@@ -404,7 +399,7 @@ void CrMain::joyCallback(const sensor_msgs::Joy::ConstPtr& joy)
         {
             // right?
             // right-most target
-            launcher_target_index = 2;
+            launcher_target_index = 1;
             driveLauncherWheel();
             drivePitch();
         }
@@ -412,7 +407,7 @@ void CrMain::joyCallback(const sensor_msgs::Joy::ConstPtr& joy)
         {
             // left?
             // left-most target
-            launcher_target_index = 3;
+            launcher_target_index = 2;
             driveLauncherWheel();
             drivePitch();
         }
@@ -420,7 +415,7 @@ void CrMain::joyCallback(const sensor_msgs::Joy::ConstPtr& joy)
         {
             // up?
             // v goal
-            launcher_target_index = 4;
+            launcher_target_index = 3;
             driveLauncherWheel();
             drivePitch();
         }
@@ -446,7 +441,7 @@ void CrMain::driveLauncherWheel(void)
 void CrMain::stopLauncherWheel(void)
 {
     ROS_DEBUG("killing the launcher...");
-    launcher_esc_msg.data = launcher_esc_list[0];
+    launcher_esc_msg.data = launcher_esc_off;
     launcher_esc_pub.publish(launcher_esc_msg);
 }
 
@@ -480,8 +475,8 @@ void CrMain::LoaderRetractTimerCallback(const ros::TimerEvent& event)
 
 void CrMain::drivePitch(void)
 {
-    ROS_DEBUG("driving the pitchCtrl...");
-    pitch_angle_msg.data = pitch_angle_list[launcher_target_index];
+    pitch_angle_msg.data = pitch_angle_list[launcher_target_index] * pitch_steps_per_deg;
+    ROS_DEBUG("driving the pitchCtrl: %d", pitch_angle_msg.data);
     pitch_angle_pub.publish(pitch_angle_msg);
 }
 
