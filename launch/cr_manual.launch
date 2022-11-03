@@ -16,8 +16,8 @@
         <rosparam param="launcher_pitch_angle_increment">10.0</rosparam>
         <rosparam param="launcher_pitch_angle_min">5.0</rosparam>
         <rosparam param="launcher_pitch_angle_max">75.0</rosparam>
-        <rosparam param="pitch_angle">[6.5, 10.0, 15.0, 70.0]</rosparam>
-        <rosparam param="launcher_esc">[1130, 1130, 1130, 1060]</rosparam>
+        <rosparam param="pitch_angle">[6.5, 10.0, 15.0, 45.0]</rosparam>
+        <rosparam param="launcher_esc">[1130, 1250, 1400, 1500]</rosparam>
         <rosparam param="launcher_esc_off">1000</rosparam>
         <rosparam param="loader_servo_extend">600</rosparam>
         <rosparam param="loader_servo_retract">2500</rosparam>
