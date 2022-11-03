@@ -132,10 +132,16 @@ private:
     double loader_retract_delay = 3.0;
     double picker_retract_delay = 3.0;
     double picker_extend_delay = 3.0;
+    bool picker_auto_extend = false;
 
     std::vector<double> pitch_angle_list = { 0.0, 0.0, 0.0, 0.0 };
     std::vector<int> launcher_esc_list = { 0, 0, 0, 0 };
     int launcher_target_index = 0;
+    int launcher_target_count = 0;
+    double launcher_pitch_angle = 0.0;
+    double launcher_pitch_angle_increment = 0.0;
+    double launcher_pitch_angle_min = 0.0;
+    double launcher_pitch_angle_max = 0.0;
     //		{0, -40 * steps_per_mm;
     //static constexpr int lift_position_first = -40 * steps_per_mm;
     //static constexpr int lift_position_second = lift_position_first - (248 * steps_per_mm);
@@ -200,6 +206,7 @@ CrMain::CrMain(void)
     nh_priv.getParam("launcher_esc_off", this->launcher_esc_off);
     nh_priv.getParam("picker_esc_on", this->picker_esc_on);
     nh_priv.getParam("picker_esc_off", this->picker_esc_off);
+    nh_priv.getParam("picker_auto_extend", this->picker_auto_extend);
     nh_priv.getParam("picker_servo_extend", this->picker_servo_extend);
     nh_priv.getParam("picker_servo_retract", this->picker_servo_retract);
     nh_priv.getParam("loader_servo_extend", this->loader_servo_extend);
@@ -209,6 +216,13 @@ CrMain::CrMain(void)
     loader_timer = nh_.createTimer(loader_retract_delay, &CrMain::LoaderRetractTimerCallback, this, true, false);
     nh_priv.getParam("picker_retract_delay", picker_retract_delay);
     nh_priv.getParam("picker_extend_delay", picker_extend_delay);
+
+    nh_priv.getParam("launcher_pitch_angle_increment", this->launcher_pitch_angle_increment);
+    nh_priv.getParam("launcher_pitch_angle_min", this->launcher_pitch_angle_min);
+    nh_priv.getParam("launcher_pitch_angle_max", this->launcher_pitch_angle_max);
+    this->launcher_pitch_angle_increment *= pitch_steps_per_deg;
+    this->launcher_pitch_angle_min *= pitch_steps_per_deg;
+    this->launcher_pitch_angle_max *= pitch_steps_per_deg;
 
     // create picker timer
     picker_retract_timer = nh_.createTimer(picker_retract_delay, &CrMain::pickerRetractTimerCallback, this, true,
@@ -222,24 +236,34 @@ CrMain::CrMain(void)
     ROS_INFO("picker_servo_retract: %d", this->picker_servo_retract);
     ROS_INFO("loader_servo_extend: %d", this->loader_servo_extend);
     ROS_INFO("loader_servo_retract: %d", this->loader_servo_retract);
+    ROS_INFO("launcher_pitch_angle_increment: %lf", this->launcher_pitch_angle_increment);
+    ROS_INFO("launcher_pitch_angle_min: %lf", this->launcher_pitch_angle_min);
+    ROS_INFO("launcher_pitch_angle_max: %lf", this->launcher_pitch_angle_max);
 
     std::vector<double> tmp_angle_list;
     nh_priv.getParam("pitch_angle", tmp_angle_list);
-    if (tmp_angle_list.size() == 4)
-    {
+    //if (tmp_angle_list.size() == 4)
+    //{
         this->pitch_angle_list = tmp_angle_list;
-    }
+    //}
     ROS_INFO("pitch_angle: %lf, %lf, %lf, %lf", this->pitch_angle_list[0], this->pitch_angle_list[1],
             this->pitch_angle_list[2], this->pitch_angle_list[3]);
 
     std::vector<int> tmp_esc_list;
     nh_priv.getParam("launcher_esc", tmp_esc_list);
-    if (tmp_esc_list.size() == 4)
-    {
+    //if (tmp_esc_list.size() == 4)
+    //{
         this->launcher_esc_list = tmp_esc_list;
-    }
+    //}
     ROS_INFO("launcher_esc: %d, %d, %d, %d", this->launcher_esc_list[0], this->launcher_esc_list[1],
             this->launcher_esc_list[2], this->launcher_esc_list[3]);
+
+    if(tmp_angle_list.size() != tmp_esc_list.size())
+    {
+        ROS_FATAL("The sizes of pitch_angle and launcher_esc don't match!");
+        ros::shutdown();
+    }
+    this->launcher_target_count = tmp_angle_list.size();
 
     nh_.getParam("ButtonA", ButtonA);
     nh_.getParam("ButtonB", ButtonB);
@@ -279,7 +303,7 @@ void CrMain::startInputCallback(const std_msgs::Empty::ConstPtr& msg)
     act_enable_msg.data = true;
     act_enable_pub.publish(act_enable_msg);
 
-    extendPicker();
+    //extendPicker();
     stopPickerFan();
 
     this->_shutdown = false;
@@ -389,33 +413,53 @@ void CrMain::joyCallback(const sensor_msgs::Joy::ConstPtr& joy)
         // route 1
         if (dx == 0 && dy > 0)
         {
-            // down?
-            // middle(center) target
-            launcher_target_index = 0;
+            // up.
+            // increase pitch angle
+
+            launcher_pitch_angle += launcher_pitch_angle_increment;
+            if(launcher_pitch_angle > launcher_pitch_angle_max)
+            {
+                launcher_pitch_angle = launcher_pitch_angle_max;
+            }
+            
             driveLauncherWheel();
             drivePitch();
         }
         else if (dx > 0 && dy == 0)
         {
-            // right?
-            // right-most target
-            launcher_target_index = 1;
+            // right.
+            // next preset
+            launcher_target_index++;
+            if(launcher_target_index >= launcher_target_count)
+            {
+                launcher_target_index = launcher_target_count - 1;
+            }
+            launcher_pitch_angle = pitch_angle_list[launcher_target_index] * pitch_steps_per_deg;
             driveLauncherWheel();
             drivePitch();
         }
         else if (dx == 0 && dy < 0)
         {
-            // left?
-            // left-most target
-            launcher_target_index = 2;
+            // down.
+            // reduce pitch angle
+            launcher_pitch_angle -= launcher_pitch_angle_increment;
+            if(launcher_pitch_angle < launcher_pitch_angle_min)
+            {
+                launcher_pitch_angle = launcher_pitch_angle_min;
+            }
             driveLauncherWheel();
             drivePitch();
         }
         else if (dx < 0 && dy == 0)
         {
-            // up?
-            // v goal
-            launcher_target_index = 3;
+            // left.
+            // previous preset
+            launcher_target_index--;
+            if(launcher_target_index < 0)
+            {
+                launcher_target_index = 0;
+            }
+            launcher_pitch_angle = pitch_angle_list[launcher_target_index] * pitch_steps_per_deg;
             driveLauncherWheel();
             drivePitch();
         }
@@ -475,7 +519,8 @@ void CrMain::LoaderRetractTimerCallback(const ros::TimerEvent& event)
 
 void CrMain::drivePitch(void)
 {
-    pitch_angle_msg.data = pitch_angle_list[launcher_target_index] * pitch_steps_per_deg;
+    //pitch_angle_msg.data = pitch_angle_list[launcher_target_index] * pitch_steps_per_deg;
+    pitch_angle_msg.data = launcher_pitch_angle;
     ROS_DEBUG("driving the pitchCtrl: %d", pitch_angle_msg.data);
     pitch_angle_pub.publish(pitch_angle_msg);
 }
@@ -483,7 +528,10 @@ void CrMain::drivePitch(void)
 void CrMain::pickerExtendTimerCallback(const ros::TimerEvent& event)
 {
     // picker already retracted and the fan turned off, so extend again and start the fan
-    extendPicker();
+    if(picker_auto_extend)
+    {
+        extendPicker();
+    }
 
     // don't start the fan just yet
     //startPickerFan();
@@ -493,8 +541,11 @@ void CrMain::pickerRetractTimerCallback(const ros::TimerEvent& event)
 {
     // picker already retracted (so we assume), turn the fan off
     stopPickerFan();
-    picker_extend_timer.setPeriod(ros::Duration(picker_extend_delay), true);
-    picker_extend_timer.start();
+    if(picker_auto_extend)
+    {
+        picker_extend_timer.setPeriod(ros::Duration(picker_extend_delay), true);
+        picker_extend_timer.start();
+    }
 }
 
 void CrMain::extendPicker(void)

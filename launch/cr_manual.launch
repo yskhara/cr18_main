@@ -2,8 +2,8 @@
 <rosparam file="$(find cr18_main)/param/joy_assign_wireless.yaml" command="load" />
     <!-- base controller -->
     <node pkg="base_controller" type="base_controller" name="base_controller" output="screen">
-        <param name="motor_max_acc" value="35.000" />
-        <param name="motor_max_vel" value="37.699111843" />
+        <param name="motor_max_acc" value="80.000" />
+        <param name="motor_max_vel" value="50.000" />
         <param name="motor_vel_coeff" value="33.333333333" />
         <param name="robot_radius" value="0.172125" />
         <param name="invert_x" value="true" />
@@ -13,12 +13,16 @@
     
     <!-- tr_main -->
     <node pkg="cr18_main" type="cr_main_joy" name="cr_main" output="screen">
+        <rosparam param="launcher_pitch_angle_increment">10.0</rosparam>
+        <rosparam param="launcher_pitch_angle_min">5.0</rosparam>
+        <rosparam param="launcher_pitch_angle_max">75.0</rosparam>
         <rosparam param="pitch_angle">[6.5, 10.0, 15.0, 70.0]</rosparam>
         <rosparam param="launcher_esc">[1130, 1130, 1130, 1060]</rosparam>
         <rosparam param="launcher_esc_off">1000</rosparam>
         <rosparam param="loader_servo_extend">600</rosparam>
         <rosparam param="loader_servo_retract">2500</rosparam>
         
+        <rosparam param="picker_auto_extend">false</rosparam>
         <rosparam param="picker_esc_on">1200</rosparam>
         <rosparam param="picker_esc_off">1000</rosparam>
         <rosparam param="picker_servo_extend">1000</rosparam>
