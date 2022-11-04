@@ -30,7 +30,7 @@
         <rosparam param="picker_servo_retract">2500</rosparam>
         
         <rosparam param="loader_retract_delay">1.0</rosparam>
-        <rosparam param="picker_retract_delay">2.0</rosparam>
+        <rosparam param="picker_retract_delay">1.0</rosparam>
         <rosparam param="picker_extend_delay">1.0</rosparam>
         
         
