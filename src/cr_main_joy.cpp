@@ -142,6 +142,7 @@ private:
     double launcher_pitch_angle_increment = 0.0;
     double launcher_pitch_angle_min = 0.0;
     double launcher_pitch_angle_max = 0.0;
+    double launcher_pitch_angle_initial = 0.0;
     //		{0, -40 * steps_per_mm;
     //static constexpr int lift_position_first = -40 * steps_per_mm;
     //static constexpr int lift_position_second = lift_position_first - (248 * steps_per_mm);
@@ -220,9 +221,11 @@ CrMain::CrMain(void)
     nh_priv.getParam("launcher_pitch_angle_increment", this->launcher_pitch_angle_increment);
     nh_priv.getParam("launcher_pitch_angle_min", this->launcher_pitch_angle_min);
     nh_priv.getParam("launcher_pitch_angle_max", this->launcher_pitch_angle_max);
+    nh_priv.getParam("launcher_pitch_angle_initial", this->launcher_pitch_angle_initial);
     this->launcher_pitch_angle_increment *= pitch_steps_per_deg;
     this->launcher_pitch_angle_min *= pitch_steps_per_deg;
     this->launcher_pitch_angle_max *= pitch_steps_per_deg;
+    this->launcher_pitch_angle_initial *= pitch_steps_per_deg;
 
     // create picker timer
     picker_retract_timer = nh_.createTimer(picker_retract_delay, &CrMain::pickerRetractTimerCallback, this, true,
@@ -239,6 +242,7 @@ CrMain::CrMain(void)
     ROS_INFO("launcher_pitch_angle_increment: %lf", this->launcher_pitch_angle_increment);
     ROS_INFO("launcher_pitch_angle_min: %lf", this->launcher_pitch_angle_min);
     ROS_INFO("launcher_pitch_angle_max: %lf", this->launcher_pitch_angle_max);
+    ROS_INFO("launcher_pitch_angle_initial: %lf", this->launcher_pitch_angle_initial);
 
     std::vector<double> tmp_angle_list;
     nh_priv.getParam("pitch_angle", tmp_angle_list);
@@ -520,7 +524,7 @@ void CrMain::LoaderRetractTimerCallback(const ros::TimerEvent& event)
 void CrMain::drivePitch(void)
 {
     //pitch_angle_msg.data = pitch_angle_list[launcher_target_index] * pitch_steps_per_deg;
-    pitch_angle_msg.data = launcher_pitch_angle;
+    pitch_angle_msg.data = launcher_pitch_angle - launcher_pitch_angle_initial;
     ROS_DEBUG("driving the pitchCtrl: %d", pitch_angle_msg.data);
     pitch_angle_pub.publish(pitch_angle_msg);
 }
