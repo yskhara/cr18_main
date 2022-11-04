@@ -13,12 +13,12 @@
     
     <!-- tr_main -->
     <node pkg="cr18_main" type="cr_main_joy" name="cr_main" output="screen">
-        <rosparam param="launcher_pitch_angle_increment">10.0</rosparam>
+        <rosparam param="launcher_pitch_angle_increment">1.0</rosparam>
         <rosparam param="launcher_pitch_angle_min">-20.0</rosparam>
         <rosparam param="launcher_pitch_angle_max">55.0</rosparam>
         <rosparam param="launcher_pitch_angle_initial">55.0</rosparam>
-        <rosparam param="pitch_angle">[30.0, 20.0, 10.0, 0.0]</rosparam>
-        <rosparam param="launcher_esc">[1100, 1200, 1300, 1400]</rosparam>
+        <rosparam param="pitch_angle">[0.0, 10.0, 20.0, 45.0]</rosparam>
+        <rosparam param="launcher_esc">[1200, 1200, 1200, 1200]</rosparam>
         <rosparam param="launcher_esc_off">1000</rosparam>
         <rosparam param="loader_servo_extend">600</rosparam>
         <rosparam param="loader_servo_retract">2500</rosparam>
