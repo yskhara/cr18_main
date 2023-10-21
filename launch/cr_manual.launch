@@ -9,31 +9,20 @@
         <param name="invert_x" value="true" />
         <param name="invert_y" value="true" />
         <param name="invert_z" value="false" />
+        <param name="sensitivity_adj_pow_xy" value="2.0" />
+        <param name="sensitivity_adj_pow_z" value="2.0" />
     </node>
     
     <!-- tr_main -->
     <node pkg="cr18_main" type="cr_main_joy" name="cr_main" output="screen">
-        <rosparam param="launcher_pitch_angle_increment">1.0</rosparam>
-        <rosparam param="launcher_pitch_angle_min">-20.0</rosparam>
-        <rosparam param="launcher_pitch_angle_max">55.0</rosparam>
-        <rosparam param="launcher_pitch_angle_initial">55.0</rosparam>
-        <rosparam param="pitch_angle">[0.0, 10.0, 20.0, 45.0]</rosparam>
-        <rosparam param="launcher_esc">[1200, 1200, 1200, 1200]</rosparam>
-        <rosparam param="launcher_esc_off">1000</rosparam>
-        <rosparam param="loader_servo_extend">600</rosparam>
-        <rosparam param="loader_servo_retract">2500</rosparam>
+        <rosparam param="extension_steps_per_deg">138.888888888889</rosparam>
+        <rosparam param="extension_angle_extended">5.0</rosparam>
+        <rosparam param="extension_angle_half_extended">15.0</rosparam>
+        <rosparam param="extension_angle_retracted">90.0</rosparam>
+        <rosparam param="extension_angle_initial">90.0</rosparam>
         
-        <rosparam param="picker_auto_extend">false</rosparam>
-        <rosparam param="picker_esc_on">1200</rosparam>
-        <rosparam param="picker_esc_off">1000</rosparam>
-        <rosparam param="picker_servo_extend">1000</rosparam>
-        <rosparam param="picker_servo_retract">2500</rosparam>
-        
-        <rosparam param="loader_retract_delay">1.0</rosparam>
-        <rosparam param="picker_retract_delay">1.0</rosparam>
-        <rosparam param="picker_extend_delay">1.0</rosparam>
-        
-        
+        <rosparam param="delay_before_retraction">1.0</rosparam>
+        <rosparam param="delay_after_extension">0.7</rosparam>
     </node>
     
     <!-- joy teleop -->
@@ -42,7 +31,7 @@
         <param name="max_ang" value="1.570796327" />
     </node>
     
-    <!-- joy node -->
+    <!-- joy node -->picker_extend_delay
     <node respawn="true" pkg="joy" type="joy_node" name="joy_node">
         <param name="dev" type="string" value="/dev/input/js0" />
         <param name="deadzone" value="0.12" />
@@ -54,6 +43,9 @@
             port: /dev/ttyUSB0
             baud: 921600
         </rosparam>
+        <remap from="pitch_angle" to="extension_angle" />
+        <remap from="chuck_left" to="chuck_left_chucked" />
+        <remap from="chuck_right" to="chuck_right_chucked" />
     </node>
 
     <node pkg="rosserial_python" type="message_info_service.py" name="rosserial_message_info" />

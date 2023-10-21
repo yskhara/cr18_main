@@ -13,55 +13,6 @@
 #include <std_msgs/Empty.h>
 #include <vector>
 #include <string>
-/*
- static constexpr int ButtonA = 0;
- static constexpr int ButtonB = 1;
- static constexpr int ButtonX = 2;
- static constexpr int ButtonY = 3;
- static constexpr int ButtonLB = 4;
- static constexpr int ButtonRB = 5;
- static constexpr int ButtonSelect = 6;
- static constexpr int ButtonStart = 7;
- static constexpr int ButtonLeftThumb = 8;
- static constexpr int ButtonRightThumb = 9;
-
- static constexpr int AxisDPadX = 6;
- static constexpr int AxisDPadY = 7;
- */
-
-enum class CarrierStatus
-    : uint16_t
-    {
-        shutdown = 0x0000,
-    reset = 0x0001,
-
-/*
- operational			= 0x0002,
-
- chuck0_chucked		= 0x0010,
- chuck1_chucked		= 0x0020,
- chuck2_chucked		= 0x0040,
- chuck3_chucked		= 0x0080,
- */
-};
-
-enum class CarrierCommands
-    : uint16_t
-    {
-        shutdown_cmd = 0x0000,
-    reset_cmd = 0x0001,
-    /*
-     operational			= 0x0002,
-     */
-
-    chuck_cmd = 0x0100,
-    unchuck_cmd = 0x0200,
-
-    chuck0 = 0x0010,
-    chuck1 = 0x0020,
-    chuck2 = 0x0040,
-    chuck3 = 0x0080,
-};
 
 class CrMain
 {
@@ -73,88 +24,53 @@ private:
     void startInputCallback(const std_msgs::Empty::ConstPtr& msg);
     void joyCallback(const sensor_msgs::Joy::ConstPtr& joy);
 
-    void driveLauncherWheel(void);
-    void stopLauncherWheel(void);
-    void extendLoader(void);
-    void retractLoader(void);
-    void LoaderRetractTimerCallback(const ros::TimerEvent& event);
+    void chuckLeft(void);
+    void unchuckLeft(void);
+    void chuckRight(void);
+    void unchuckRight(void);
 
-    void drivePitch(void);
-
-    void extendPicker(void);
-    void retractPicker(void);
-    void startPickerFan(void);
-    void stopPickerFan(void);
-    void pickerRetractTimerCallback(const ros::TimerEvent& event);
-    void pickerExtendTimerCallback(const ros::TimerEvent& event);
+    void extendChucks(void);
+    void halfExtendChucks(void);
+    void retractChucks(void);
+    void chucksRetractionTimerCallback(const ros::TimerEvent& event);
+    void chucksExtensionTimerCallback(const ros::TimerEvent& event);
 
     ros::NodeHandle nh_;
 
-    ros::Timer picker_retract_timer;
-    ros::Timer picker_extend_timer;
-    ros::Timer loader_timer;
+    ros::Timer chucks_retraction_timer;
+    ros::Timer chucks_extension_timer;
 
-    //int linear_, angular_;
     ros::Subscriber joy_sub;
     ros::Subscriber shutdown_input_sub;
     ros::Subscriber start_input_sub;
-
-    ros::Publisher launcher_esc_pub;
-    ros::Publisher loader_servo_pub;
-    ros::Publisher pitch_angle_pub;
     ros::Publisher act_enable_pub;
 
-    ros::Publisher picker_esc_pub;
-    ros::Publisher picker_servo_pub;
+    ros::Publisher extension_angle_pub;
+    ros::Publisher chuck_left_chucked_pub;
+    ros::Publisher chuck_right_chucked_pub;
 
-    std_msgs::Int16 launcher_esc_msg;
-    std_msgs::Int16 loader_servo_msg;
-    std_msgs::Int16 pitch_angle_msg;
-    //std_msgs::Bool hand_cylinder_msg;
     std_msgs::Bool act_enable_msg;
+    std_msgs::Bool chuck_left_chucked_msg;
+    std_msgs::Bool chuck_right_chucked_msg;
+    std_msgs::Int32 extension_angle_msg;
 
-    std_msgs::Int16 picker_esc_msg;
-    std_msgs::Int16 picker_servo_msg;
+    static constexpr double extension_steps_per_rev = (160.0 / 32 * 50 / 16) * 16 * 200;
+    double extension_steps_per_deg = extension_steps_per_rev / 360.0;
 
-    static constexpr double pitch_steps_per_rev = (144.0 / 16) * 16 * 200;
-    double pitch_steps_per_deg = pitch_steps_per_rev / 360.0;
+    double delay_before_retraction = 3.0;
+    double delay_after_extension = 3.0;
 
-    static constexpr int servo_neutral = 1520;
-
-    int launcher_esc_off = 1000;      // min
-    int picker_esc_on = 1520;       // fully on
-    int picker_esc_off = 1000;      // min
-    int picker_servo_extend = servo_neutral;
-    int picker_servo_retract = servo_neutral;
-    int loader_servo_extend = servo_neutral;
-    int loader_servo_retract = servo_neutral;
-
-    double loader_retract_delay = 3.0;
-    double picker_retract_delay = 3.0;
-    double picker_extend_delay = 3.0;
-    bool picker_auto_extend = false;
-
-    std::vector<double> pitch_angle_list = { 0.0, 0.0, 0.0, 0.0 };
-    std::vector<int> launcher_esc_list = { 0, 0, 0, 0 };
-    int launcher_target_index = 0;
-    int launcher_target_count = 0;
-    double launcher_pitch_angle = 0.0;
-    double launcher_pitch_angle_increment = 0.0;
-    double launcher_pitch_angle_min = 0.0;
-    double launcher_pitch_angle_max = 0.0;
-    double launcher_pitch_angle_initial = 0.0;
-    //		{0, -40 * steps_per_mm;
-    //static constexpr int lift_position_first = -40 * steps_per_mm;
-    //static constexpr int lift_position_second = lift_position_first - (248 * steps_per_mm);
-    //static constexpr int lift_position_third = lift_position_second - (248 * steps_per_mm);
+    double extension_angle_extended = 0.0;
+    double extension_angle_half_extended = 10.0;
+    double extension_angle_retracted = 90.0;
+    double extension_angle_initial = 90.0;
 
     bool _shutdown = false;
 
-    bool picker_extended = false;
-    bool picker_retracted = false;
-    bool launcher_wheel_running = false;
-    bool launcher_wheel_stop_scheduled = false;
-    bool loader_loading = false;
+    bool chuck_left_chucked = false;
+    bool chuck_right_chucked = false;
+    bool chucks_releasing = false;
+    bool chucks_capturing = false;
 
     static int ButtonA;
     static int ButtonB;
@@ -191,83 +107,38 @@ CrMain::CrMain(void)
     shutdown_input_sub = nh_.subscribe<std_msgs::Empty>("shutdown_input", 10, &CrMain::shutdownInputCallback, this);
     start_input_sub = nh_.subscribe<std_msgs::Empty>("start_input", 10, &CrMain::startInputCallback, this);
 
-    this->launcher_esc_pub = nh_.advertise<std_msgs::Int16>("launcher_esc", 1);
-    this->loader_servo_pub = nh_.advertise<std_msgs::Int16>("loader_servo", 1);
+    this->chuck_left_chucked_pub = nh_.advertise<std_msgs::Bool>("chuck_left_chucked", 1);
+    this->chuck_right_chucked_pub = nh_.advertise<std_msgs::Bool>("chuck_right_chucked", 1);
 
-    this->pitch_angle_pub = nh_.advertise<std_msgs::Int16>("pitch_angle", 1);
+    this->extension_angle_pub = nh_.advertise<std_msgs::Int32>("extension_angle", 1);
     this->act_enable_pub = nh_.advertise<std_msgs::Bool>("act_enable", 1);
-
-    this->picker_esc_pub = nh_.advertise<std_msgs::Int16>("picker_esc", 1);
-    this->picker_servo_pub = nh_.advertise<std_msgs::Int16>("picker_servo", 1);
 
     auto nh_priv = ros::NodeHandle("~");
 
-    nh_priv.getParam("pitch_steps_per_deg", this->pitch_steps_per_deg);
+    nh_priv.getParam("delay_before_retraction", delay_before_retraction);
+    nh_priv.getParam("delay_after_extension", delay_after_extension);
 
-    nh_priv.getParam("launcher_esc_off", this->launcher_esc_off);
-    nh_priv.getParam("picker_esc_on", this->picker_esc_on);
-    nh_priv.getParam("picker_esc_off", this->picker_esc_off);
-    nh_priv.getParam("picker_auto_extend", this->picker_auto_extend);
-    nh_priv.getParam("picker_servo_extend", this->picker_servo_extend);
-    nh_priv.getParam("picker_servo_retract", this->picker_servo_retract);
-    nh_priv.getParam("loader_servo_extend", this->loader_servo_extend);
-    nh_priv.getParam("loader_servo_retract", this->loader_servo_retract);
+    nh_priv.getParam("extension_steps_per_deg", this->extension_steps_per_deg);
 
-    nh_priv.getParam("loader_retract_delay", loader_retract_delay);
-    loader_timer = nh_.createTimer(loader_retract_delay, &CrMain::LoaderRetractTimerCallback, this, true, false);
-    nh_priv.getParam("picker_retract_delay", picker_retract_delay);
-    nh_priv.getParam("picker_extend_delay", picker_extend_delay);
+    nh_priv.getParam("extension_angle_extended", this->extension_angle_extended);
+    nh_priv.getParam("extension_angle_half_extended", this->extension_angle_half_extended);
+    nh_priv.getParam("extension_angle_retracted", this->extension_angle_retracted);
+    nh_priv.getParam("extension_angle_initial", this->extension_angle_initial);
+    this->extension_angle_extended *= extension_steps_per_deg;
+    this->extension_angle_half_extended *= extension_steps_per_deg;
+    this->extension_angle_retracted *= extension_steps_per_deg;
+    this->extension_angle_initial *= extension_steps_per_deg;
 
-    nh_priv.getParam("launcher_pitch_angle_increment", this->launcher_pitch_angle_increment);
-    nh_priv.getParam("launcher_pitch_angle_min", this->launcher_pitch_angle_min);
-    nh_priv.getParam("launcher_pitch_angle_max", this->launcher_pitch_angle_max);
-    nh_priv.getParam("launcher_pitch_angle_initial", this->launcher_pitch_angle_initial);
-    this->launcher_pitch_angle_increment *= pitch_steps_per_deg;
-    this->launcher_pitch_angle_min *= pitch_steps_per_deg;
-    this->launcher_pitch_angle_max *= pitch_steps_per_deg;
-    this->launcher_pitch_angle_initial *= pitch_steps_per_deg;
+    chucks_extension_timer = nh_.createTimer(delay_after_extension, &CrMain::chucksExtensionTimerCallback, this, true, false);
+    chucks_retraction_timer = nh_.createTimer(delay_before_retraction, &CrMain::chucksRetractionTimerCallback, this, true, false);
 
-    // create picker timer
-    picker_retract_timer = nh_.createTimer(picker_retract_delay, &CrMain::pickerRetractTimerCallback, this, true,
-            false);
-    picker_extend_timer = nh_.createTimer(picker_extend_delay, &CrMain::pickerExtendTimerCallback, this, true, false);
+    ROS_INFO("delay_before_retraction: %f", this->delay_before_retraction);
+    ROS_INFO("delay_after_extension: %f", this->delay_after_extension);
 
-    ROS_INFO("launcher_esc_off: %d", this->launcher_esc_off);
-    ROS_INFO("picker_esc_on: %d", this->picker_esc_on);
-    ROS_INFO("picker_esc_off: %d", this->picker_esc_off);
-    ROS_INFO("picker_servo_extend: %d", this->picker_servo_extend);
-    ROS_INFO("picker_servo_retract: %d", this->picker_servo_retract);
-    ROS_INFO("loader_servo_extend: %d", this->loader_servo_extend);
-    ROS_INFO("loader_servo_retract: %d", this->loader_servo_retract);
-    ROS_INFO("launcher_pitch_angle_increment: %lf", this->launcher_pitch_angle_increment);
-    ROS_INFO("launcher_pitch_angle_min: %lf", this->launcher_pitch_angle_min);
-    ROS_INFO("launcher_pitch_angle_max: %lf", this->launcher_pitch_angle_max);
-    ROS_INFO("launcher_pitch_angle_initial: %lf", this->launcher_pitch_angle_initial);
-
-    std::vector<double> tmp_angle_list;
-    nh_priv.getParam("pitch_angle", tmp_angle_list);
-    //if (tmp_angle_list.size() == 4)
-    //{
-        this->pitch_angle_list = tmp_angle_list;
-    //}
-    ROS_INFO("pitch_angle: %lf, %lf, %lf, %lf", this->pitch_angle_list[0], this->pitch_angle_list[1],
-            this->pitch_angle_list[2], this->pitch_angle_list[3]);
-
-    std::vector<int> tmp_esc_list;
-    nh_priv.getParam("launcher_esc", tmp_esc_list);
-    //if (tmp_esc_list.size() == 4)
-    //{
-        this->launcher_esc_list = tmp_esc_list;
-    //}
-    ROS_INFO("launcher_esc: %d, %d, %d, %d", this->launcher_esc_list[0], this->launcher_esc_list[1],
-            this->launcher_esc_list[2], this->launcher_esc_list[3]);
-
-    if(tmp_angle_list.size() != tmp_esc_list.size())
-    {
-        ROS_FATAL("The sizes of pitch_angle and launcher_esc don't match!");
-        ros::shutdown();
-    }
-    this->launcher_target_count = tmp_angle_list.size();
+    ROS_INFO("extension_angle_extended: %lf", this->extension_angle_extended);
+    ROS_INFO("extension_angle_half_extended: %lf", this->extension_angle_half_extended);
+    ROS_INFO("extension_angle_retracted: %lf", this->extension_angle_retracted);
+    ROS_INFO("extension_angle_initial: %lf", this->extension_angle_initial);
 
     nh_.getParam("ButtonA", ButtonA);
     nh_.getParam("ButtonB", ButtonB);
@@ -290,25 +161,23 @@ void CrMain::shutdownInputCallback(const std_msgs::Empty::ConstPtr& msg)
     {
         this->_shutdown = true;
 
-        ROS_INFO("aborting.");
+        ROS_INFO("Aborting. (Source: EMS)");
     }
 
-    // reset this:
-    // this->CurrentCommandIndex = -1;
-    launcher_target_index = 0;
+    // Reset internal state:
+    chuck_left_chucked = false;
+    chuck_right_chucked = false;
+    chucks_releasing = false;
+    chucks_capturing = false;
 }
 
 void CrMain::startInputCallback(const std_msgs::Empty::ConstPtr& msg)
 {
     // bring the robot back operational
-
-    ROS_INFO("starting.");
+    ROS_INFO("Starting.");
 
     act_enable_msg.data = true;
     act_enable_pub.publish(act_enable_msg);
-
-    //extendPicker();
-    stopPickerFan();
 
     this->_shutdown = false;
 }
@@ -340,7 +209,7 @@ void CrMain::joyCallback(const sensor_msgs::Joy::ConstPtr& joy)
         {
             this->_shutdown = true;
 
-            ROS_INFO("aborting.");
+            ROS_INFO("Aborting. (Source: user input)");
         }
 
         act_enable_msg.data = false;
@@ -351,121 +220,109 @@ void CrMain::joyCallback(const sensor_msgs::Joy::ConstPtr& joy)
     {
         if (_a && !last_a)
         {
-
+            if(!chucks_capturing && !chucks_releasing)
+            {
+                // Toggle left chuck
+                if(chuck_left_chucked)
+                {
+                    unchuckLeft();
+                }
+                else
+                {
+                    chuckLeft();
+                }
+            }
         }
 
         if (_b && !last_b)
         {
-
+            if(!chucks_capturing && !chucks_releasing)
+            {
+                // Toggle right chuck
+                if(chuck_right_chucked)
+                {
+                    unchuckRight();
+                }
+                else
+                {
+                    chuckRight();
+                }
+            }
         }
 
         if (_x && !last_x)
         {
-            // retract picker and then turn off the fan
-            retractPicker();
-            picker_retract_timer.setPeriod(ros::Duration(picker_retract_delay), true);
-            picker_retract_timer.start();
+            // Extend the extension and then unchuck both
+            if(!chucks_capturing && !chucks_releasing)
+            {
+                chucks_releasing = true;
+                extendChucks();
+                chucks_extension_timer.setPeriod(ros::Duration(delay_after_extension), true);
+                chucks_extension_timer.start();
+            }
         }
 
         if (_y && !last_y)
         {
-            picker_retract_timer.stop();
-            extendPicker();
-            startPickerFan();
+            if(!chucks_capturing && !chucks_releasing)
+            {
+                // Chuck both and then retract the extension
+                chucks_capturing = true;
+                chuckLeft();
+                chuckRight();
+                chucks_retraction_timer.setPeriod(ros::Duration(delay_before_retraction), true);
+                chucks_retraction_timer.start();
+            }
         }
 
         if (_lb && !last_lb)
         {
-            // keep the wheels rolling
-            if (!launcher_wheel_running)
+            if(!chucks_capturing && !chucks_releasing)
             {
-                driveLauncherWheel();
-                launcher_wheel_running = true;
-            }
-        }
-
-        if(!_lb && last_lb)
-        {
-            if (loader_loading)
-            {
-                // don't stop the wheels (yet
-                launcher_wheel_stop_scheduled = true;
-            }
-            else
-            {
-                stopLauncherWheel();
-                launcher_wheel_running = false;
-                launcher_wheel_stop_scheduled = false;
+                // simply extend extension
+                extendChucks();
             }
         }
 
         if (_rb && !last_rb)
         {
-            if (!loader_loading)
+            if(!chucks_capturing && !chucks_releasing)
             {
-                // load projectile into the launcher
-                loader_loading = true;
-                extendLoader();
-                loader_timer.setPeriod(ros::Duration(loader_retract_delay), true);
-                loader_timer.start();
+                // simply retract extension
+                retractChucks();
             }
         }
 
         int dx = -joy->axes[AxisDPadX];
         int dy = joy->axes[AxisDPadY];
 
-        // route 1
         if (dx == 0 && dy > 0)
         {
-            // up.
-            // increase pitch angle
-
-            launcher_pitch_angle += launcher_pitch_angle_increment;
-            if(launcher_pitch_angle > launcher_pitch_angle_max)
+            // Up: Extend all the way
+            if(!chucks_capturing && !chucks_releasing)
             {
-                launcher_pitch_angle = launcher_pitch_angle_max;
+                extendChucks();
             }
-            
-            driveLauncherWheel();
-            drivePitch();
         }
         else if (dx > 0 && dy == 0)
         {
-            // right.
-            // next preset
-            launcher_target_index++;
-            if(launcher_target_index >= launcher_target_count)
-            {
-                launcher_target_index = launcher_target_count - 1;
-            }
-            launcher_pitch_angle = pitch_angle_list[launcher_target_index] * pitch_steps_per_deg;
-            driveLauncherWheel();
-            drivePitch();
+            // Right: Do nothing
         }
         else if (dx == 0 && dy < 0)
         {
-            // down.
-            // reduce pitch angle
-            launcher_pitch_angle -= launcher_pitch_angle_increment;
-            if(launcher_pitch_angle < launcher_pitch_angle_min)
+            // Down: Retract all the way
+            if(!chucks_capturing && !chucks_releasing)
             {
-                launcher_pitch_angle = launcher_pitch_angle_min;
+                retractChucks();
             }
-            driveLauncherWheel();
-            drivePitch();
         }
         else if (dx < 0 && dy == 0)
         {
-            // left.
-            // previous preset
-            launcher_target_index--;
-            if(launcher_target_index < 0)
+            // Left: Extend half way
+            if(!chucks_capturing && !chucks_releasing)
             {
-                launcher_target_index = 0;
+                halfExtendChucks();
             }
-            launcher_pitch_angle = pitch_angle_list[launcher_target_index] * pitch_steps_per_deg;
-            driveLauncherWheel();
-            drivePitch();
         }
     }
 
@@ -479,106 +336,72 @@ void CrMain::joyCallback(const sensor_msgs::Joy::ConstPtr& joy)
     last_select = _select;
 }
 
-void CrMain::driveLauncherWheel(void)
+void CrMain::chuckLeft(void)
 {
-    ROS_DEBUG("driving the launcher...");
-    launcher_esc_msg.data = launcher_esc_list[launcher_target_index];
-    launcher_esc_pub.publish(launcher_esc_msg);
+    ROS_DEBUG("Chucking LEFT...");
+    chuck_left_chucked_msg.data = true;
+    chuck_left_chucked_pub.publish(chuck_left_chucked_msg);
+    chuck_left_chucked = true;
 }
 
-void CrMain::stopLauncherWheel(void)
+void CrMain::unchuckLeft(void)
 {
-    ROS_DEBUG("killing the launcher...");
-    launcher_esc_msg.data = launcher_esc_off;
-    launcher_esc_pub.publish(launcher_esc_msg);
+    ROS_DEBUG("Unchucking LEFT...");
+    chuck_left_chucked_msg.data = false;
+    chuck_left_chucked_pub.publish(chuck_left_chucked_msg);
+    chuck_left_chucked = false;
 }
 
-void CrMain::extendLoader(void)
+void CrMain::chuckRight(void)
 {
-    ROS_DEBUG("loading projectile into the chamber...");
-    loader_servo_msg.data = loader_servo_extend;
-    loader_servo_pub.publish(loader_servo_msg);
-    loader_loading = true;
+    ROS_DEBUG("Chucking RIGHT...");
+    chuck_right_chucked_msg.data = true;
+    chuck_right_chucked_pub.publish(chuck_right_chucked_msg);
+    chuck_right_chucked = true;
 }
 
-void CrMain::retractLoader(void)
+void CrMain::unchuckRight(void)
 {
-    ROS_DEBUG("retracting the loader...");
-    loader_servo_msg.data = loader_servo_retract;
-    loader_servo_pub.publish(loader_servo_msg);
-    loader_loading = false;
+    ROS_DEBUG("Unchucking RIGHT...");
+    chuck_right_chucked_msg.data = false;
+    chuck_right_chucked_pub.publish(chuck_right_chucked_msg);
+    chuck_right_chucked = false;
 }
 
-void CrMain::LoaderRetractTimerCallback(const ros::TimerEvent& event)
+void CrMain::extendChucks(void)
 {
-    retractLoader();
-
-    if (launcher_wheel_stop_scheduled)
-    {
-        stopLauncherWheel();
-        launcher_wheel_running = false;
-        launcher_wheel_stop_scheduled = false;
-    }
+    extension_angle_msg.data = extension_angle_extended - extension_angle_initial;
+    ROS_DEBUG("Extending the Extension: %d", extension_angle_msg.data);
+    extension_angle_pub.publish(extension_angle_msg);
 }
 
-void CrMain::drivePitch(void)
+void CrMain::halfExtendChucks(void)
 {
-    //pitch_angle_msg.data = pitch_angle_list[launcher_target_index] * pitch_steps_per_deg;
-    pitch_angle_msg.data = launcher_pitch_angle - launcher_pitch_angle_initial;
-    ROS_DEBUG("driving the pitchCtrl: %d", pitch_angle_msg.data);
-    pitch_angle_pub.publish(pitch_angle_msg);
+    extension_angle_msg.data = extension_angle_half_extended - extension_angle_initial;
+    ROS_DEBUG("Half-extending the Extension: %d", extension_angle_msg.data);
+    extension_angle_pub.publish(extension_angle_msg);
 }
 
-void CrMain::pickerExtendTimerCallback(const ros::TimerEvent& event)
+void CrMain::retractChucks(void)
 {
-    // picker already retracted and the fan turned off, so extend again and start the fan
-    if(picker_auto_extend)
-    {
-        extendPicker();
-    }
-
-    // don't start the fan just yet
-    //startPickerFan();
+    extension_angle_msg.data = extension_angle_retracted - extension_angle_initial;
+    ROS_DEBUG("Retracting the Extension: %d", extension_angle_msg.data);
+    extension_angle_pub.publish(extension_angle_msg);
 }
 
-void CrMain::pickerRetractTimerCallback(const ros::TimerEvent& event)
+void CrMain::chucksRetractionTimerCallback(const ros::TimerEvent& event)
 {
-    // picker already retracted (so we assume), turn the fan off
-    stopPickerFan();
-    if(picker_auto_extend)
-    {
-        picker_extend_timer.setPeriod(ros::Duration(picker_extend_delay), true);
-        picker_extend_timer.start();
-    }
+    // Both chucks are chucked
+    retractChucks();
+    chucks_capturing = false;
 }
 
-void CrMain::extendPicker(void)
+void CrMain::chucksExtensionTimerCallback(const ros::TimerEvent& event)
 {
-    ROS_DEBUG("extending picker...");
-    picker_servo_msg.data = picker_servo_extend;
-    picker_servo_pub.publish(picker_servo_msg);
-}
-
-void CrMain::retractPicker(void)
-{
-    ROS_DEBUG("picking up...");
-    picker_servo_msg.data = picker_servo_retract;
-    picker_servo_pub.publish(picker_servo_msg);
-    picker_extended = false;
-}
-
-void CrMain::startPickerFan(void)
-{
-    ROS_DEBUG("turning the fan on...");
-    picker_esc_msg.data = picker_esc_on;
-    picker_esc_pub.publish(picker_esc_msg);
-}
-
-void CrMain::stopPickerFan(void)
-{
-    ROS_DEBUG("turning the fan off...");
-    picker_esc_msg.data = picker_esc_off;
-    picker_esc_pub.publish(picker_esc_msg);
+    // Chucks are extended. Unchuck both.
+    unchuckLeft();
+    unchuckRight();
+    chucks_releasing = false;
 }
 
 int main(int argc, char** argv)
